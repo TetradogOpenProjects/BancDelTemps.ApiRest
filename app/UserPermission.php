@@ -5,16 +5,16 @@ namespace App;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Request extends Model
+class UserPermission extends Model
 {
     use SoftDeletes;
     public function User(){
         return $this->belongsTo(User::class);
     }
-    public function ApprovedBy(){
-        return $this->belongsTo(User::class,'approvedBy_id');
+    public function GrantedBy(){
+        return $this->belongsTo(User::class,'grantedBy_id');
     }
-    public function Location(){
-        return $this->belongsTo(Location::class);
+    public function Permission(){
+        return $this->belongsTo(Permission::class);
     }
 }

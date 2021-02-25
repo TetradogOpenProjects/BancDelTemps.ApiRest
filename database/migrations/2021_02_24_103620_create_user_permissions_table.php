@@ -22,6 +22,7 @@ class CreateUserPermissionsTable extends Migration
             $table->softDeletes();//por seguridad
             $table->timestamps();
 
+            $table->unique('user_id','permission_id');
         });
     }
 

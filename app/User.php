@@ -3,13 +3,14 @@
 namespace App;
 
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
     use Notifiable;
-
+    use SoftDeletes;
     /**
      * The attributes that are mass assignable.
      *
@@ -36,4 +37,12 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    public function IsAdmin(){
+        return UserPermission::where('user_id',$this->id)->where('name',Permission::ADMIN)->count()!=0;
+    }
+    
+    public function IsMod(){
+        return UserPermission::where('user_id',$this->id)->where('name',Permission::MOD)->count()!=0;
+    }
 }

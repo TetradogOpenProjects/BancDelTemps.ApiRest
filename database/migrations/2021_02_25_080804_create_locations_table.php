@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateUsersRequestTable extends Migration
+class CreateLocationsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,12 +13,8 @@ class CreateUsersRequestTable extends Migration
      */
     public function up()
     {
-        Schema::create('usersRequest', function (Blueprint $table) {
+        Schema::create('locations', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id');
-            $table->unsignedBigInteger('request_id');
-            $table->unsignedBigInteger('approvedBy_id')->default(null);
-            $table->boolean('assisted')->default(false);
             $table->timestamps();
         });
     }
@@ -30,6 +26,6 @@ class CreateUsersRequestTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('usersRequest');
+        Schema::dropIfExists('locations');
     }
 }

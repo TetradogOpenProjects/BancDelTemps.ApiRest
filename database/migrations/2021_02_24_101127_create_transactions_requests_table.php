@@ -13,7 +13,7 @@ class CreateTransactionsRequestsTable extends Migration
      */
     public function up()
     {
-        Schema::create('transactionsRequests', function (Blueprint $table) {
+        Schema::create('RequestTransactions', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('request_id');
             $table->unsignedBigInteger('transaction_id');
@@ -30,6 +30,6 @@ class CreateTransactionsRequestsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('transactionsRequests');
+        Schema::dropIfExists('RequestTransactions');
     }
 }

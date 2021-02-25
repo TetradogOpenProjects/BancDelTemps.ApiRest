@@ -13,7 +13,7 @@ class CreateTransactionsEventsTable extends Migration
      */
     public function up()
     {
-        Schema::create('transactionsEvents', function (Blueprint $table) {
+        Schema::create('EventTransactions', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('event_id');
             $table->unsignedBigInteger('transaction_id');
@@ -30,6 +30,6 @@ class CreateTransactionsEventsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('transactionsEvents');
+        Schema::dropIfExists('EventTransactions');
     }
 }
