@@ -22,8 +22,8 @@ class EventTransactionFactory extends Factory
     public function definition()
     {
         return [
-           'event_id'=>Event::Factory(),
-           'transaction_id'=>Transaction::Factory()
+           'event_id'=>Event::factory(),
+           'transaction_id'=>Transaction::factory()
         ];
     }
 }

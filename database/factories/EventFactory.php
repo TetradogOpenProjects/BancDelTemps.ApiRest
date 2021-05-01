@@ -23,9 +23,9 @@ class EventFactory extends Factory
     {
         return [
             
-           'user_id'        =>User::Factory(),
-           'location_id'    =>Location::Factory(),
-           'approvedBy_id'  =>User::Factory(),
+           'user_id'        =>User::factory(),
+           'location_id'    =>Location::factory(),
+           'approvedBy_id'  =>User::factory(),
 
            'title'          =>$this->faker->paragraph,
            'description'    =>$this->faker->paragraph,

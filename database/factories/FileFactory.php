@@ -22,7 +22,7 @@ class FileFactory extends Factory
     public function definition()
     {
         return [
-            'approvedBy_id'=>User::Factory(),
+            'approvedBy_id'=>User::factory(),
             'name'=>$this->faker->name(),
             'format'=>'bin',
             'canDelete'=>$this->faker->boolval()
