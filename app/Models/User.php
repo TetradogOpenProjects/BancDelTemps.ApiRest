@@ -1,7 +1,7 @@
 <?php
 
-namespace App;
-
+namespace App\Models;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -9,6 +9,7 @@ use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
+    use HasFactory;
     use Notifiable;
     use SoftDeletes;
     /**
@@ -44,5 +45,8 @@ class User extends Authenticatable
     
     public function IsMod(){
         return UserPermission::where('user_id',$this->id)->where('name',Permission::MOD)->count()!=0;
+    }
+    public function IsValid(){
+        return UserPermission::where('user_id',$this->id)->where('name',Permission::VALIDATED_USER)->count()!=0; 
     }
 }
