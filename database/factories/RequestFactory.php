@@ -3,6 +3,8 @@
 namespace Database\Factories;
 
 use App\Models\Request;
+use App\Models\User;
+use App\Models\Location;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class RequestFactory extends Factory
@@ -25,9 +27,9 @@ class RequestFactory extends Factory
             'user_id'=>User::factory(),
             'approvedBy_id'=>User::factory(),
             'location_id'=>Location::factory(),
-            'title'=>$this->faker->paragraph,
-            'description'=>$this->faker->paragraph,
-            'numUsersRequired'=>$this->faker->random_int(1,10)
+            'title'=>$this->faker->sentence(),
+            'description'=>$this->faker->paragraph(),
+            'numUsersRequired'=>$this->faker->randomDigit()
         ];
     }
 }

@@ -3,6 +3,8 @@
 namespace Database\Factories;
 
 use App\Models\UserEvent;
+use App\Models\User;
+use App\Models\Event;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class UserEventFactory extends Factory
@@ -25,7 +27,7 @@ class UserEventFactory extends Factory
             'user_id'=>User::factory(),
             'event_id'=>Event::factory(),
             'approvedBy_id'=>User::factory(),
-            'assisted'=>$this->faker->boolval()
+            'assisted'=>$this->faker->boolean()
         ];
     }
 }

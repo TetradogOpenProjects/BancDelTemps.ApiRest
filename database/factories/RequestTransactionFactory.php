@@ -3,6 +3,8 @@
 namespace Database\Factories;
 
 use App\Models\RequestTransaction;
+use App\Models\Request;
+use App\Models\Transaction;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class RequestTransactionFactory extends Factory

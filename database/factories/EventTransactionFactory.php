@@ -3,6 +3,8 @@
 namespace Database\Factories;
 
 use App\Models\EventTransaction;
+use App\Models\Event;
+use App\Models\Transaction;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class EventTransactionFactory extends Factory

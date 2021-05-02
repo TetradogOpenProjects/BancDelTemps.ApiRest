@@ -3,6 +3,9 @@
 namespace Database\Factories;
 
 use App\Models\UserDocument;
+use App\Models\User;
+use App\Models\File;
+use App\Models\Category;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class UserDocumentFactory extends Factory
@@ -25,7 +28,7 @@ class UserDocumentFactory extends Factory
             'user_id'=>User::factory(),
             'file_id'=>File::factory(),
             'category_id'=>Category::factory(),
-            'isPublic'=>$this->faker->boolval()
+            'isPublic'=>$this->faker->boolean()
         ];
     }
 }

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class UserRequest extends Model
 {
     use HasFactory;
+    protected $table="UsersRequest";
     public function Request(){
         return $this->belongsTo(Request::class);
     }

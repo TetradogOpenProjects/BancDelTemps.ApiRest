@@ -22,10 +22,10 @@ class LocationFactory extends Factory
     public function definition()
     {
         return [
-            'name'=>$this->faker->name(),
-            'address'=>$this->faker->paragraph,
-            'latitude'=>$this->faker->floatval(),
-            'longitude'=>$this->faker->floatval()
+            'name'=>$this->faker->streetName(),
+            'address'=>$this->faker->streetAddress(),
+            'latitude'=>$this->faker->latitude(),
+            'longitude'=>$this->faker->longitude()
         ];
     }
 }

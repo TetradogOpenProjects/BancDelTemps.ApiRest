@@ -3,6 +3,8 @@
 namespace Database\Factories;
 
 use App\Models\UserPermission;
+use App\Models\User;
+use App\Models\Permission;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class UserPermissionFactory extends Factory

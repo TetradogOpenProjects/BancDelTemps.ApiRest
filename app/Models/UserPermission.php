@@ -9,6 +9,7 @@ class UserPermission extends Model
 {
     use HasFactory;
     use SoftDeletes;
+    protected $table="UserPermissions";
     public function User(){
         return $this->belongsTo(User::class);
     }

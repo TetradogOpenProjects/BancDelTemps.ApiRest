@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Message;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class MessageFactory extends Factory
@@ -24,10 +25,10 @@ class MessageFactory extends Factory
         return [
             'from_id'=>User::factory(),
             'to_id'=>User::factory(),
-            'content'=>$this->faker->paragraph,
-            'fromHidden'=>$this->boolval(),
-            'toHidden'=>$this->boolval(),
-            'toCheck'=>$this->boolval()
+            'content'=>$this->faker->sentence(),
+            'fromHidden'=>$this->faker->boolean(),
+            'toHidden'=>$this->faker->boolean(),
+            'toCheck'=>$this->faker->boolean()
         ];
     }
 }

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class UserEvent extends Model
 {
     use HasFactory;
+    protected $table="UsersEvent";
     public function Event(){
         return $this->belongsTo(Event::class);
     }

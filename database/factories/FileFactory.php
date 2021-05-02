@@ -3,6 +3,8 @@
 namespace Database\Factories;
 
 use App\Models\File;
+use App\Models\User;
+
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class FileFactory extends Factory
@@ -25,7 +27,7 @@ class FileFactory extends Factory
             'approvedBy_id'=>User::factory(),
             'name'=>$this->faker->name(),
             'format'=>'bin',
-            'canDelete'=>$this->faker->boolval()
+            'canDelete'=>$this->faker->boolean()
         ];
     }
 }

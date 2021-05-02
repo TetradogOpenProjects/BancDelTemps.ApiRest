@@ -9,6 +9,7 @@ class EventTransaction extends Model
 {
     use HasFactory;
     use SoftDeletes;
+    protected $table="EventTransactions";
     public function Event(){
         return $this->belongsTo(Event::class);
     }

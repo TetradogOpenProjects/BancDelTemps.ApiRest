@@ -22,8 +22,8 @@ class CategoryFactory extends Factory
     public function definition()
     {
         return [
-            'name'=>$this->feker->name(),
-            'documentRequiered'=>$this->faker->boolval()
+            'name'=>$this->faker->name(),
+            'documentRequired'=>$this->faker->boolean()
         ];
     }
 }
