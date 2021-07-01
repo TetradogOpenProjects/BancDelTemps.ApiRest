@@ -18,7 +18,13 @@ namespace BancDelTemps.ApiRest.Models
     public class User
     {
         public static DateTime DefaultExpireTokenDate { get; set; } = DateTime.UtcNow.AddDays(1);
-        public User() { }
+        public User() {
+            Permisos = new List<UserPermiso>();
+            Granted = new List<UserPermiso>();
+            Revoked = new List<UserPermiso>();
+            Validated = new List<User>();
+        
+        }
         public User([NotNull] ClaimsPrincipal principal) : this()
         {
 
@@ -52,6 +58,11 @@ namespace BancDelTemps.ApiRest.Models
 
         public bool IsOnHolidays => StartHolidays.HasValue && DateTime.UtcNow > StartHolidays.Value && (!EndHolidays.HasValue || DateTime.UtcNow < EndHolidays.Value);
 
+        public ICollection<UserPermiso> Permisos { get; set; }
+        public IEnumerable<string> PermisosName => Permisos.Select(p => p.Permiso.Nombre);
+        public ICollection<UserPermiso> Granted { get; set; }
+        public ICollection<UserPermiso> Revoked { get; set; }
+        public bool IsAdmin => PermisosName.Any(p => Permiso.ADMIN.Equals(p));
 
         public override string ToString()
         {
@@ -67,11 +78,9 @@ namespace BancDelTemps.ApiRest.Models
                 new Claim(JwtRegisteredClaimNames.Jti,Guid.NewGuid().ToString()),
                 new Claim(JwtRegisteredClaimNames.Iat,DateTime.UtcNow.ToString()), 
                 new Claim(nameof(Name),Name),
-                new Claim(nameof(Surname),Surname),
                 new Claim(nameof(Email),Email),
                 new Claim(nameof(JoinDate),JoinDate.ToString()),
-                new Claim(nameof(IsValidated),IsValidated.ToString()),
-                new Claim(nameof(IsOnHolidays),IsOnHolidays.ToString()),
+                new Claim(nameof(IsValidated),IsValidated.ToString())
 
             };
             return new JwtSecurityToken(configuration["Jwt:Issuer"], configuration["Jwt:Audience"],
@@ -80,7 +89,7 @@ namespace BancDelTemps.ApiRest.Models
         }
         public static string GetEmailFromHttpContext(HttpContext context)
         {
-            const int EMAIL = 5;//si cambio el orden de los claim en nameof(GetToken) tengo que mirar donde queda el Email de nuevo!!
+            const int EMAIL = 4;//si cambio el orden de los claim en nameof(GetToken) tengo que mirar donde queda el Email de nuevo!!
             Claim[] claims = context.User.Identities.FirstOrDefault().Claims.ToArray();
 
             return claims[EMAIL].Value;
@@ -98,6 +107,7 @@ namespace BancDelTemps.ApiRest.Models
             IsOnHoliDays = user.IsOnHolidays;
             Email = user.Email;
             JoinDate = user.JoinDate;
+            Permisos = user.PermisosName.ToArray();
         }
         public string Name { get; set; }
         public string Surname { get; set; }
@@ -105,5 +115,6 @@ namespace BancDelTemps.ApiRest.Models
         public bool IsOnHoliDays { get; set; }
         public string Email { get; set; }
         public DateTime JoinDate { get; set; }
+        public string[] Permisos { get; set; }
     }
 }
