@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BancDelTemps.ApiRest.Migrations
 {
     [DbContext(typeof(Context))]
-    [Migration("20210701021932_Init")]
+    [Migration("20210701024122_Init")]
     partial class Init
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -34,6 +34,9 @@ namespace BancDelTemps.ApiRest.Migrations
 
                     b.Property<string>("IdExterno")
                         .HasColumnType("longtext");
+
+                    b.Property<DateTime>("JoinDate")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("Name")
                         .IsRequired()

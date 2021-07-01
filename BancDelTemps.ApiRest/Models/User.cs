@@ -28,11 +28,13 @@ namespace BancDelTemps.ApiRest.Models
             Email = claims[^1].Value;
             Name = claims[2].Value;
             Surname = claims[3].Value;
+            JoinDate = DateTime.UtcNow;
         }
 
         public string IdExterno { get; set; }
 
         public int Id { get; set; }
+        public DateTime JoinDate { get; set; }
         [Required]
         public string Name { get; set; }
         [Required]
@@ -47,6 +49,7 @@ namespace BancDelTemps.ApiRest.Models
         public ICollection<User> Validated { get; set; }
         public DateTime? StartHolidays { get; set; }
         public DateTime? EndHolidays { get; set; }
+
         public bool IsOnHolidays => StartHolidays.HasValue && DateTime.UtcNow > StartHolidays.Value && (!EndHolidays.HasValue || DateTime.UtcNow < EndHolidays.Value);
 
 
@@ -66,8 +69,10 @@ namespace BancDelTemps.ApiRest.Models
                 new Claim(nameof(Name),Name),
                 new Claim(nameof(Surname),Surname),
                 new Claim(nameof(Email),Email),
+                new Claim(nameof(JoinDate),JoinDate.ToString()),
                 new Claim(nameof(IsValidated),IsValidated.ToString()),
-                new Claim(nameof(IsOnHolidays),IsOnHolidays.ToString())
+                new Claim(nameof(IsOnHolidays),IsOnHolidays.ToString()),
+
             };
             return new JwtSecurityToken(configuration["Jwt:Issuer"], configuration["Jwt:Audience"],
                                         claims, expires: Equals(expiraToken, default(DateTime)) ? DefaultExpireTokenDate : expiraToken,
@@ -92,11 +97,13 @@ namespace BancDelTemps.ApiRest.Models
             IsValidated = user.IsValidated;
             IsOnHoliDays = user.IsOnHolidays;
             Email = user.Email;
+            JoinDate = user.JoinDate;
         }
         public string Name { get; set; }
         public string Surname { get; set; }
         public bool IsValidated { get; set; }
         public bool IsOnHoliDays { get; set; }
         public string Email { get; set; }
+        public DateTime JoinDate { get; set; }
     }
 }

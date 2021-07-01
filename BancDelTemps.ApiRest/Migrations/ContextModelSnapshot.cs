@@ -33,6 +33,9 @@ namespace BancDelTemps.ApiRest.Migrations
                     b.Property<string>("IdExterno")
                         .HasColumnType("longtext");
 
+                    b.Property<DateTime>("JoinDate")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("longtext");

@@ -56,7 +56,7 @@ namespace BancDelTemps.ApiRest.Controllers
         public async Task<IActionResult> GetToken()
         {
             IActionResult result;
-            User userInfoAux;
+            User user;
             JwtSecurityToken token;
             AuthenticateResult googleResult;
 
@@ -64,13 +64,13 @@ namespace BancDelTemps.ApiRest.Controllers
 
             if (googleResult.Succeeded)
             {
-                userInfoAux = new User(googleResult.Principal);
-                if (!Context.ExistUser(userInfoAux))
+                user = new User(googleResult.Principal);
+                if (!Context.ExistUser(user))
                 {
                     //no existe pues lo añado
                     try
                     {
-                        Context.Users.Add(userInfoAux);
+                        Context.Users.Add(user);
                         await Context.SaveChangesAsync();
                     }
                     catch (DbUpdateConcurrencyException)
@@ -79,7 +79,7 @@ namespace BancDelTemps.ApiRest.Controllers
                     }
                 }
 
-                token = userInfoAux.GetToken(Configuration);
+                token = Context.GetUser(user).GetToken(Configuration);//así obtengo la información guardada
                 result = Ok(token.WriteToken());
             }
             else
