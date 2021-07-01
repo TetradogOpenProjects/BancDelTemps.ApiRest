@@ -22,28 +22,29 @@ namespace BancDelTemps.ApiRest
         {
             base.OnModelCreating(modelBuilder);
             //User
-            modelBuilder.Entity<User>().HasOne(u => u.Validator).WithMany(u => u.Validated);
-            modelBuilder.Entity<User>().HasMany(u => u.Permisos).WithOne(up => up.User);
-            modelBuilder.Entity<User>().HasMany(u => u.Granted).WithOne(up => up.GrantedBy);
-            modelBuilder.Entity<User>().HasMany(u => u.Revoked).WithOne(up => up.RevokedBy);
+            modelBuilder.Entity<User>().HasOne(u => u.Validator).WithMany(u => u.Validated).HasForeignKey(u=>u.ValidatorId);
+            modelBuilder.Entity<User>().HasMany(u => u.Permisos).WithOne(up => up.User).HasForeignKey(p=>p.UserId);
+            modelBuilder.Entity<User>().HasMany(u => u.Granted).WithOne(up => up.GrantedBy).HasForeignKey(g=>g.GrantedById);
+            modelBuilder.Entity<User>().HasMany(u => u.Revoked).WithOne(up => up.RevokedBy).HasForeignKey(r=>r.RevokedById);
             modelBuilder.Entity<User>().Navigation(u => u.Granted).UsePropertyAccessMode(PropertyAccessMode.Property);
             modelBuilder.Entity<User>().Navigation(u => u.Revoked).UsePropertyAccessMode(PropertyAccessMode.Property);
             modelBuilder.Entity<User>().Navigation(u => u.Permisos).UsePropertyAccessMode(PropertyAccessMode.Property);
             modelBuilder.Entity<User>().Navigation(u => u.Validator).UsePropertyAccessMode(PropertyAccessMode.Property);
             modelBuilder.Entity<User>().Navigation(u => u.Validated).UsePropertyAccessMode(PropertyAccessMode.Property);
             //Permisos
-            modelBuilder.Entity<Permiso>().HasMany(u => u.Users).WithOne(up => up.Permiso);
+            modelBuilder.Entity<Permiso>().HasMany(u => u.Users).WithOne(up => up.Permiso).HasForeignKey(p=>p.PermisoId);
             modelBuilder.Entity<Permiso>().Navigation(u => u.Users).UsePropertyAccessMode(PropertyAccessMode.Property);
             //UserPermisos
             modelBuilder.Entity<UserPermiso>().HasKey(nameof(UserPermiso.UserId), nameof(UserPermiso.PermisoId));
-            modelBuilder.Entity<UserPermiso>().HasOne(u => u.User).WithMany(u => u.Permisos);
-            modelBuilder.Entity<UserPermiso>().HasOne(u => u.Permiso).WithMany(up => up.Users);
-            modelBuilder.Entity<UserPermiso>().HasOne(u => u.GrantedBy).WithMany(up => up.Granted);
-            modelBuilder.Entity<UserPermiso>().HasOne(u => u.RevokedBy).WithMany(up => up.Revoked);
             modelBuilder.Entity<UserPermiso>().Navigation(u => u.GrantedBy).UsePropertyAccessMode(PropertyAccessMode.Property);
             modelBuilder.Entity<UserPermiso>().Navigation(u => u.RevokedBy).UsePropertyAccessMode(PropertyAccessMode.Property);
             modelBuilder.Entity<UserPermiso>().Navigation(u => u.Permiso).UsePropertyAccessMode(PropertyAccessMode.Property);
             modelBuilder.Entity<UserPermiso>().Navigation(u => u.User).UsePropertyAccessMode(PropertyAccessMode.Property);
+
+
+
+            //añado datos al principio
+            modelBuilder.Entity<Permiso>().HasData(Permiso.Todos.Select(p => new Permiso() { Nombre = p }));
         }
 
         public User GetUser([NotNull]User user)
@@ -52,7 +53,10 @@ namespace BancDelTemps.ApiRest
         }
         public User GetUser([NotNull]string email)
         {
-            return Users.Where(u => u.Email.Equals(email)).FirstOrDefault();
+            return Users.Include(u=>u.Permisos)
+                        .ThenInclude(p=>p.Permiso)
+                        .Where(u => u.Email.Equals(email))
+                        .FirstOrDefault();
         }
         public bool ExistUser([NotNull] User user)
         {
