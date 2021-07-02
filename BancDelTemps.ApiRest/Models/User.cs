@@ -125,6 +125,7 @@ namespace BancDelTemps.ApiRest.Models
             Email = user.Email;
             JoinDate = user.JoinDate;
             Permisos = user.PermisosActivosName;
+            TotalMinutos = user.TotalMinutos;
         }
         public string Name { get; set; }
         public string Surname { get; set; }
@@ -133,5 +134,6 @@ namespace BancDelTemps.ApiRest.Models
         public string Email { get; set; }
         public DateTime JoinDate { get; set; }
         public IEnumerable<string> Permisos { get; set; }
+        public int TotalMinutos { get; set; }
     }
 }

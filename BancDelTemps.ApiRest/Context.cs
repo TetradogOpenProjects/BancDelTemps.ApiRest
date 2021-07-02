@@ -1,5 +1,6 @@
 ﻿using BancDelTemps.ApiRest.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -69,28 +70,47 @@ namespace BancDelTemps.ApiRest
             modelBuilder.Entity<Permiso>().HasData(Permiso.Todos.Select(p => new Permiso() { Nombre = p }));
         }
 
-        public User GetUser([NotNull]User user)
+        public User GetUserPermiso([NotNull]User user)
         {
-            return GetUser(user.Email);
+            return GetUserPermiso(user.Email);
         }
-        public User GetUser([NotNull]string email)
+        public User GetUserPermiso([NotNull]string email)
         {
-            return GetUsers().Where(u => u.Email.Equals(email))
+            return GetUsersPermisos().Where(u => u.Email.Equals(email))
                              .FirstOrDefault();
         }
-        public IEnumerable<User> GetUsers()
+        public IIncludableQueryable<User, Permiso> GetUsersPermisos()
         {
-            var permisos = PermisosUsuarios.ToList();
             return Users.Include(u => u.Permisos)
                         .ThenInclude(p => p.Permiso);
+       
+                       
+        }
+        public User GetUserPermisoWithTransacciones([NotNull] User user)
+        {
+            return GetUserPermisoWithTransacciones(user.Email);
+        }
+        public User GetUserPermisoWithTransacciones([NotNull] string email)
+        {
+            return GetUsersPermisosWithTransacciones().Where(u => u.Email.Equals(email))
+                             .FirstOrDefault();
+        }
+        public IIncludableQueryable<User,ICollection<Transaccion>> GetUsersPermisosWithTransacciones()
+        {
+            return GetUsersPermisos().Include(u=>u.TransaccionesIn)
+                                     .Include(u=>u.TransaccionesFrom)
+                                     .Include(u => u.TransaccionesSigned)
+                                     .Include(u => u.TransaccionesValidator);
+
+
         }
         public bool ExistUser([NotNull] User user)
         {
-            return !Equals(GetUser(user), default);
+            return ExistUser(user.Email);
         }
         public bool ExistUser([NotNull] string email)
         {
-            return !Equals(GetUser(email), default);
+            return !Equals(Users.Where(u=>u.Email.Equals(email)).FirstOrDefault(), default);
         }
     }
 }

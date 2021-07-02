@@ -36,7 +36,7 @@ namespace BancDelTemps.ApiRest.Controllers
             User user;
             if (HttpContext.User.Identity.IsAuthenticated)
             {
-                user = Context.GetUser(Models.User.GetEmailFromHttpContext(HttpContext));
+                user = Context.GetUserPermisoWithTransacciones(Models.User.GetEmailFromHttpContext(HttpContext));
                 result = Ok(new UserDTO(user));
             }
             else result = Unauthorized();
@@ -52,10 +52,10 @@ namespace BancDelTemps.ApiRest.Controllers
             User user;
             if (HttpContext.User.Identity.IsAuthenticated)
             {
-                user = Context.GetUser(Models.User.GetEmailFromHttpContext(HttpContext));
+                user = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(HttpContext));
                 if (user.IsAdmin)
                 {
-                    result = Ok(Context.GetUsers().Select(u=>new UserDTO(u)));
+                    result = Ok(Context.GetUsersPermisosWithTransacciones().Select(u=>new UserDTO(u)));
                 }
                 else result = Unauthorized();
             }
@@ -71,7 +71,7 @@ namespace BancDelTemps.ApiRest.Controllers
             User user;
             if (HttpContext.User.Identity.IsAuthenticated)
             {
-                user = Context.GetUser(Models.User.GetEmailFromHttpContext(HttpContext));
+                user = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(HttpContext));
                 if (user.IsAdmin)
                 {
                     result = Ok((await Context.Permisos.ToListAsync()).Select(p=>p.Nombre));
@@ -118,7 +118,7 @@ namespace BancDelTemps.ApiRest.Controllers
                     }
                 }
 
-                token = Context.GetUser(user).GetToken(Configuration);//así obtengo la información guardada
+                token = Context.GetUserPermiso(user).GetToken(Configuration);//así obtengo la información guardada
                 result = Ok(token.WriteToken());
             }
             else
@@ -142,11 +142,11 @@ namespace BancDelTemps.ApiRest.Controllers
             UserPermiso userPermiso;
             if (HttpContext.User.Identity.IsAuthenticated)
             {
-                userGranter = Context.GetUser(Models.User.GetEmailFromHttpContext(HttpContext));
+                userGranter = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(HttpContext));
                 
                 if (userGranter.IsAdmin)
                 {
-                    userToAdd = Context.GetUser(permisoUserDTO.EmailUser);
+                    userToAdd = Context.GetUserPermiso(permisoUserDTO.EmailUser);
                     if (!Equals(userToAdd, default))
                     {
                         permiso = Context.Permisos.Where(p => p.Nombre.Equals(permisoUserDTO.Permiso)).FirstOrDefault();
@@ -194,11 +194,11 @@ namespace BancDelTemps.ApiRest.Controllers
 
             if (HttpContext.User.Identity.IsAuthenticated)
             {
-                userRevoker = Context.GetUser(Models.User.GetEmailFromHttpContext(HttpContext));
+                userRevoker = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(HttpContext));
 
                 if (userRevoker.IsAdmin)
                 {
-                    userToRemove = Context.GetUser(permisoUserDTO.EmailUser);
+                    userToRemove = Context.GetUserPermiso(permisoUserDTO.EmailUser);
                     if (!Equals(userToRemove, default))
                     {
                         permiso = Context.Permisos.Where(p => p.Nombre.Equals(permisoUserDTO.Permiso)).FirstOrDefault();
