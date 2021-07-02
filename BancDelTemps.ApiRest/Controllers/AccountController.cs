@@ -42,6 +42,45 @@ namespace BancDelTemps.ApiRest.Controllers
             else result = Unauthorized();
             return result;
         }
+
+        [HttpGet]
+        [Route("all")]
+        [Authorize]
+        public IActionResult GetAllUsers()
+        {
+            IActionResult result;
+            User user;
+            if (HttpContext.User.Identity.IsAuthenticated)
+            {
+                user = Context.GetUser(Models.User.GetEmailFromHttpContext(HttpContext));
+                if (user.IsAdmin)
+                {
+                    result = Ok(Context.GetUsers().Select(u=>new UserDTO(u)));
+                }
+                else result = Unauthorized();
+            }
+            else result = Unauthorized();
+            return result;
+        }
+        [HttpGet]
+        [Route("allPermisos")]
+        [Authorize]
+        public async Task<IActionResult> GetAllPermisos()
+        {
+            IActionResult result;
+            User user;
+            if (HttpContext.User.Identity.IsAuthenticated)
+            {
+                user = Context.GetUser(Models.User.GetEmailFromHttpContext(HttpContext));
+                if (user.IsAdmin)
+                {
+                    result = Ok((await Context.Permisos.ToListAsync()).Select(p=>p.Nombre));
+                }
+                else result = Unauthorized();
+            }
+            else result = Unauthorized();
+            return result;
+        }
         [HttpGet]
         [Route("login")]
         public IActionResult GoogleLogin()
@@ -90,5 +129,108 @@ namespace BancDelTemps.ApiRest.Controllers
 
 
         }
+
+        [HttpPut]
+        [Route("permisos")]
+        [Authorize]
+        public IActionResult PermissionsPut(PermisoUserDTO permisoUserDTO)
+        {
+            IActionResult result;
+            User userGranter;
+            User userToAdd;
+            Permiso permiso;
+            UserPermiso userPermiso;
+            if (HttpContext.User.Identity.IsAuthenticated)
+            {
+                userGranter = Context.GetUser(Models.User.GetEmailFromHttpContext(HttpContext));
+                
+                if (userGranter.IsAdmin)
+                {
+                    userToAdd = Context.GetUser(permisoUserDTO.EmailUser);
+                    if (!Equals(userToAdd, default))
+                    {
+                        permiso = Context.Permisos.Where(p => p.Nombre.Equals(permisoUserDTO.Permiso)).FirstOrDefault();
+                        if (!Equals(permiso, default))
+                        {
+                            try
+                            {
+                                userPermiso = Context.PermisosUsuarios.Where(p => p.PermisoId.Equals(permiso.Id) && p.UserId.Equals(userToAdd.Id)).FirstOrDefault();
+                                if (!Equals(userPermiso, default))
+                                {
+                                    userPermiso.GrantedBy = userGranter;
+                                    userPermiso.GrantedDate = DateTime.UtcNow;
+                                    Context.PermisosUsuarios.Update(userPermiso);
+                                }
+                                else
+                                {
+                                    Context.PermisosUsuarios.Add(new UserPermiso(userGranter, userToAdd, permiso));
+                                }
+                                Context.SaveChanges();
+                               
+                            }
+                            catch { }
+                            result = Ok();
+                        }
+                        else result = NotFound();
+                    }
+                    else result = NotFound();
+              
+                }
+                else result = Unauthorized();
+            }
+            else result = Unauthorized();
+            return result;
+        }
+        [HttpDelete]
+        [Route("permisos")]
+        [Authorize]
+        public IActionResult PermissionsDelete(PermisoUserDTO permisoUserDTO)
+        {
+            IActionResult result;
+            User userRevoker;
+            User userToRemove;
+            Permiso permiso;
+            UserPermiso userPermiso;
+
+            if (HttpContext.User.Identity.IsAuthenticated)
+            {
+                userRevoker = Context.GetUser(Models.User.GetEmailFromHttpContext(HttpContext));
+
+                if (userRevoker.IsAdmin)
+                {
+                    userToRemove = Context.GetUser(permisoUserDTO.EmailUser);
+                    if (!Equals(userToRemove, default))
+                    {
+                        permiso = Context.Permisos.Where(p => p.Nombre.Equals(permisoUserDTO.Permiso)).FirstOrDefault();
+                        if (!Equals(permiso, default))
+                        {
+                            userPermiso =  Context.PermisosUsuarios.Where(p => p.PermisoId.Equals(permiso.Id) && p.UserId.Equals(userToRemove.Id)).FirstOrDefault();
+                            if (!Equals(userPermiso, default))
+                            {
+                                try
+                                {
+                                    userPermiso.RevokedBy = userRevoker;
+                                    userPermiso.RevokedDate = DateTime.UtcNow;
+                                    Context.PermisosUsuarios.Update(userPermiso);
+                                    Context.SaveChanges();
+                                }
+                                catch { }
+                                result = Ok();
+
+                            }
+                            else result = NotFound();
+
+                        }
+                        else result = NotFound();
+                    }
+                    else result = NotFound();
+
+                }
+                else result = Unauthorized();
+            }
+            else result = Unauthorized();
+            return result;
+        }
+
     }
 }

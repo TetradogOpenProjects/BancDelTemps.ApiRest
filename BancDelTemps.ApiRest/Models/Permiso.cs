@@ -15,4 +15,5 @@ namespace BancDelTemps.ApiRest.Models
         public string Nombre { get; set; }
         public ICollection<UserPermiso> Users { get; set; }
     }
+
 }
