@@ -36,15 +36,15 @@ namespace BancDelTemps.ApiRest.Controllers
             User user;
             if (HttpContext.User.Identity.IsAuthenticated)
             {
-                user = Context.GetUserPermisoWithTransacciones(Models.User.GetEmailFromHttpContext(HttpContext));
+                user = Context.GetFullUser(Models.User.GetEmailFromHttpContext(HttpContext));
                 result = Ok(new UserDTO(user));
             }
-            else result = Unauthorized();
+            else result = Forbid();
             return result;
         }
 
         [HttpGet]
-        [Route("all")]
+        [Route("All")]
         [Authorize]
         public IActionResult GetAllUsers()
         {
@@ -59,11 +59,11 @@ namespace BancDelTemps.ApiRest.Controllers
                 }
                 else result = Unauthorized();
             }
-            else result = Unauthorized();
+            else result = Forbid();
             return result;
         }
         [HttpGet]
-        [Route("allPermisos")]
+        [Route("Permisos/All")]
         [Authorize]
         public async Task<IActionResult> GetAllPermisos()
         {
@@ -78,11 +78,11 @@ namespace BancDelTemps.ApiRest.Controllers
                 }
                 else result = Unauthorized();
             }
-            else result = Unauthorized();
+            else result = Forbid();
             return result;
         }
         [HttpGet]
-        [Route("login")]
+        [Route("Login")]
         public IActionResult GoogleLogin()
         {
             AuthenticationProperties properties;
@@ -91,7 +91,7 @@ namespace BancDelTemps.ApiRest.Controllers
         }
 
         [HttpGet]
-        [Route("token")]
+        [Route("Token")]
         public async Task<IActionResult> GetToken()
         {
             IActionResult result;
@@ -131,7 +131,7 @@ namespace BancDelTemps.ApiRest.Controllers
         }
 
         [HttpPut]
-        [Route("permisos")]
+        [Route("Permisos")]
         [Authorize]
         public IActionResult PermissionsPut(PermisoUserDTO permisoUserDTO)
         {
@@ -149,40 +149,47 @@ namespace BancDelTemps.ApiRest.Controllers
                     userToAdd = Context.GetUserPermiso(permisoUserDTO.EmailUser);
                     if (!Equals(userToAdd, default))
                     {
-                        permiso = Context.Permisos.Where(p => p.Nombre.Equals(permisoUserDTO.Permiso)).FirstOrDefault();
-                        if (!Equals(permiso, default))
+                        if (userGranter.Id.Equals(userToAdd.Id))
                         {
-                            try
-                            {
-                                userPermiso = Context.PermisosUsuarios.Where(p => p.PermisoId.Equals(permiso.Id) && p.UserId.Equals(userToAdd.Id)).FirstOrDefault();
-                                if (!Equals(userPermiso, default))
-                                {
-                                    userPermiso.GrantedBy = userGranter;
-                                    userPermiso.GrantedDate = DateTime.UtcNow;
-                                    Context.PermisosUsuarios.Update(userPermiso);
-                                }
-                                else
-                                {
-                                    Context.PermisosUsuarios.Add(new UserPermiso(userGranter, userToAdd, permiso));
-                                }
-                                Context.SaveChanges();
-                               
-                            }
-                            catch { }
-                            result = Ok();
+                            result = Unauthorized();//no se puede dar permisos a si mismo
                         }
-                        else result = NotFound();
+                        else
+                        {
+                            permiso = Context.Permisos.Where(p => p.Nombre.Equals(permisoUserDTO.Permiso)).FirstOrDefault();
+                            if (!Equals(permiso, default))
+                            {
+                                try
+                                {
+                                    userPermiso = Context.PermisosUsuarios.Where(p => p.PermisoId.Equals(permiso.Id) && p.UserId.Equals(userToAdd.Id)).FirstOrDefault();
+                                    if (!Equals(userPermiso, default))
+                                    {
+                                        userPermiso.GrantedBy = userGranter;
+                                        userPermiso.GrantedDate = DateTime.UtcNow;
+                                        Context.PermisosUsuarios.Update(userPermiso);
+                                    }
+                                    else
+                                    {
+                                        Context.PermisosUsuarios.Add(new UserPermiso(userGranter, userToAdd, permiso));
+                                    }
+                                    Context.SaveChanges();
+
+                                }
+                                catch { }
+                                result = Ok();
+                            }
+                            else result = NotFound();
+                        }
                     }
                     else result = NotFound();
               
                 }
                 else result = Unauthorized();
             }
-            else result = Unauthorized();
+            else result = Forbid();
             return result;
         }
         [HttpDelete]
-        [Route("permisos")]
+        [Route("Permisos")]
         [Authorize]
         public IActionResult PermissionsDelete(PermisoUserDTO permisoUserDTO)
         {
@@ -201,34 +208,41 @@ namespace BancDelTemps.ApiRest.Controllers
                     userToRemove = Context.GetUserPermiso(permisoUserDTO.EmailUser);
                     if (!Equals(userToRemove, default))
                     {
-                        permiso = Context.Permisos.Where(p => p.Nombre.Equals(permisoUserDTO.Permiso)).FirstOrDefault();
-                        if (!Equals(permiso, default))
+                        if (userRevoker.Id.Equals(userToRemove.Id))
                         {
-                            userPermiso =  Context.PermisosUsuarios.Where(p => p.PermisoId.Equals(permiso.Id) && p.UserId.Equals(userToRemove.Id)).FirstOrDefault();
-                            if (!Equals(userPermiso, default))
+                            result = Unauthorized();//no se puede quitar permisos a si mismo
+                        }
+                        else
+                        {
+                            permiso = Context.Permisos.Where(p => p.Nombre.Equals(permisoUserDTO.Permiso)).FirstOrDefault();
+                            if (!Equals(permiso, default))
                             {
-                                try
+                                userPermiso = Context.PermisosUsuarios.Where(p => p.PermisoId.Equals(permiso.Id) && p.UserId.Equals(userToRemove.Id)).FirstOrDefault();
+                                if (!Equals(userPermiso, default))
                                 {
-                                    userPermiso.RevokedBy = userRevoker;
-                                    userPermiso.RevokedDate = DateTime.UtcNow;
-                                    Context.PermisosUsuarios.Update(userPermiso);
-                                    Context.SaveChanges();
+                                    try
+                                    {
+                                        userPermiso.RevokedBy = userRevoker;
+                                        userPermiso.RevokedDate = DateTime.UtcNow;
+                                        Context.PermisosUsuarios.Update(userPermiso);
+                                        Context.SaveChanges();
+                                    }
+                                    catch { }
+                                    result = Ok();
+
                                 }
-                                catch { }
-                                result = Ok();
+                                else result = NotFound();
 
                             }
                             else result = NotFound();
-
                         }
-                        else result = NotFound();
                     }
                     else result = NotFound();
 
                 }
                 else result = Unauthorized();
             }
-            else result = Unauthorized();
+            else result = Forbid();
             return result;
         }
 

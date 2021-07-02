@@ -9,7 +9,8 @@ namespace BancDelTemps.ApiRest.Models
     public class Transaccion
     {
         public int Id { get; set; }
-
+        public Guid OperacionId { get; set; }
+        public Operacion Operacion { get; set; }
 
         public int UserFromId { get; set; }
         public User UserFrom { get; set; }
@@ -20,9 +21,21 @@ namespace BancDelTemps.ApiRest.Models
         public int? UserValidatorId { get; set; }
         public User UserValidator { get; set; }
         //así se puede delegar el hacer la transacción por otra persona
-        public int? UserFromSignedId { get; set; }
-        public User UserFromSigned { get; set; }
+        public int? TransaccionDelegadaId { get; set; }
+        public TransaccionDelegada TransaccionDelegada { get; set; }
         [NotMapped]
         public bool IsValidated => UserValidatorId.HasValue;
+    }
+
+    public class Operacion
+    {
+        public Guid Id { get; set; }
+        public int UserId { get; set; }
+        public User User { get; set; }
+        public bool Completada { get; set; }
+        public int? RevisadorId { get; set; }
+        public User Revisor { get; set; }
+        public bool IsRevisada => RevisadorId.HasValue;
+    
     }
 }

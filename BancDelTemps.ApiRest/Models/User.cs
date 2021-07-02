@@ -19,7 +19,7 @@ namespace BancDelTemps.ApiRest.Models
     public class User
     {
         public const int INITTIME = 10 * 60;//10 horas
-        public static DateTime DefaultExpireTokenDate { get; set; } = DateTime.UtcNow.AddDays(1);
+        public static TimeSpan DefaultExpireTokenTime { get; set; } = TimeSpan.FromDays(1);
         public User() {
             Permisos = new List<UserPermiso>();
             Granted = new List<UserPermiso>();
@@ -70,11 +70,15 @@ namespace BancDelTemps.ApiRest.Models
         public ICollection<UserPermiso> Revoked { get; set; }
         [NotMapped]
         public bool IsAdmin => PermisosActivosName.Any(p => Permiso.ADMIN.Equals(p));
-
+        [NotMapped]
+        public bool IsModTransaccion => PermisosActivosName.Any(p => Permiso.MODTRANSACCION.Equals(p));
         public ICollection<Transaccion> TransaccionesFrom { get; set; }
         public ICollection<Transaccion> TransaccionesIn { get; set; }
-        public ICollection<Transaccion> TransaccionesSigned { get; set; }
+        public ICollection<TransaccionDelegada> TransaccionesSigned { get; set; }
         public ICollection<Transaccion> TransaccionesValidator { get; set; }
+
+        public ICollection<Operacion> OperacionesHechas { get; set; }
+        public ICollection<Operacion> OpereacionesRevisadas { get; set; }
 
         [NotMapped]
         public int TotalMinutos =>INITTIME + TransaccionesIn.Sum(t => t.Minutos) - TransaccionesFrom.Sum(t => t.Minutos);
@@ -85,7 +89,7 @@ namespace BancDelTemps.ApiRest.Models
         {
             return Email;
         }
-        public JwtSecurityToken GetToken(IConfiguration configuration, DateTime expiraToken = default(DateTime))
+        public JwtSecurityToken GetToken(IConfiguration configuration, TimeSpan expiraToken = default(TimeSpan))
         {
             SymmetricSecurityKey key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]));
             SigningCredentials signIn = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -101,7 +105,7 @@ namespace BancDelTemps.ApiRest.Models
 
             };
             return new JwtSecurityToken(configuration["Jwt:Issuer"], configuration["Jwt:Audience"],
-                                        claims, expires: Equals(expiraToken, default(DateTime)) ? DefaultExpireTokenDate : expiraToken,
+                                        claims, expires: DateTime.UtcNow + (Equals(expiraToken, default(TimeSpan)) ? DefaultExpireTokenTime : expiraToken),
                                         signingCredentials: signIn);
         }
         public static string GetEmailFromHttpContext(HttpContext context)
@@ -118,6 +122,7 @@ namespace BancDelTemps.ApiRest.Models
         public UserDTO() { }
         public UserDTO([NotNull]User user)
         {
+            Id = user.Id;
             Name = user.Name;
             Surname = user.Surname;
             IsValidated = user.IsValidated;
@@ -127,6 +132,7 @@ namespace BancDelTemps.ApiRest.Models
             Permisos = user.PermisosActivosName;
             TotalMinutos = user.TotalMinutos;
         }
+        public int Id { get; set; }
         public string Name { get; set; }
         public string Surname { get; set; }
         public bool IsValidated { get; set; }
