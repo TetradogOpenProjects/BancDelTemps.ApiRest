@@ -35,7 +35,14 @@ namespace BancDelTemps.ApiRest.Models
         public bool Completada { get; set; }
         public int? RevisadorId { get; set; }
         public User Revisor { get; set; }
+        [NotMapped]
         public bool IsRevisada => RevisadorId.HasValue;
+        /// <summary>
+        /// Quien revisa ha aprobado la operación
+        /// </summary>
+        public bool IsValid { get; set; }
+        [NotMapped]
+        public bool IsOk => IsRevisada && IsValid;
     
     }
 }

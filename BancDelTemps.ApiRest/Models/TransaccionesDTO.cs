@@ -1,11 +1,10 @@
-﻿using BancDelTemps.ApiRest.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace BancDelTemps.ApiRest.Controllers
+namespace BancDelTemps.ApiRest.Models
 {
-    internal class TransaccionesDTO
+    public class TransaccionesDTO
     {
        
         public TransaccionesDTO() { }
@@ -54,6 +53,15 @@ namespace BancDelTemps.ApiRest.Controllers
     public class TransaccionDelegadaDTO
     {
         public TransaccionDelegadaDTO() { }
+
+        public TransaccionDelegadaDTO(TransaccionDelegada transaccion)
+        {
+            IdOperacion = transaccion.OperacionId;
+            IdUsuarioADelegar = transaccion.UserId;
+            FechaInicio = transaccion.Inicio;
+            FechaFin = transaccion.Fin;
+        }
+
         public Guid IdOperacion { get; set; }
         public int IdUsuarioADelegar { get; set; }
         public DateTime FechaInicio { get; set; }

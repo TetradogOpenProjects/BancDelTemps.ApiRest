@@ -55,9 +55,15 @@ namespace BancDelTemps.ApiRest.Controllers
                 user = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(HttpContext));
                 if (user.IsAdmin)
                 {
-                    result = Ok(Context.GetUsersPermisosWithTransacciones().Select(u=>new UserDTO(u)));
+                    result = Ok(Context.GetUsersPermisosWithTransacciones().Select(u => new UserDTO(u)));
                 }
-                else result = Unauthorized();
+                else if(user.IsValidated) {
+                    result = Ok(Context.Users.Where(u=>u.IsValidated).Select(u => new UserBasicDTO(u)));
+                }
+                else
+                {
+                    result = Unauthorized();
+                }
             }
             else result = Forbid();
             return result;
@@ -153,7 +159,7 @@ namespace BancDelTemps.ApiRest.Controllers
                         {
                             result = Unauthorized();//no se puede dar permisos a si mismo
                         }
-                        else
+                        else if(userToAdd.IsValidated)
                         {
                             permiso = Context.Permisos.Where(p => p.Nombre.Equals(permisoUserDTO.Permiso)).FirstOrDefault();
                             if (!Equals(permiso, default))
@@ -178,6 +184,10 @@ namespace BancDelTemps.ApiRest.Controllers
                                 result = Ok();
                             }
                             else result = NotFound();
+                        }
+                        else
+                        {
+                            result = Forbid();//el usuario aun no se ha validado!
                         }
                     }
                     else result = NotFound();

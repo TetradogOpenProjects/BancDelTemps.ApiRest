@@ -89,6 +89,10 @@ namespace BancDelTemps.ApiRest
             return GetUsersPermisos().Where(u => u.Email.Equals(email))
                              .FirstOrDefault();
         }
+        public User GetUserPermiso(int idUser)
+        {
+            return GetUsersPermisos().Where(u => u.Id == idUser).FirstOrDefault();
+        }
         public IIncludableQueryable<User, Permiso> GetUsersPermisos()
         {
             return Users.Include(u => u.Permisos)

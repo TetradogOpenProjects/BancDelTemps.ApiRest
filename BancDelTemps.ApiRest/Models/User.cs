@@ -142,4 +142,22 @@ namespace BancDelTemps.ApiRest.Models
         public IEnumerable<string> Permisos { get; set; }
         public int TotalMinutos { get; set; }
     }
+
+    public class UserBasicDTO
+    {
+        public UserBasicDTO() { }
+        public UserBasicDTO(User user)
+        {
+            Id = user.Id;
+            Name = user.Name;
+            Surname = user.Surname;
+            IsOnHoliDays = user.IsOnHolidays;
+        }
+
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Surname { get; set; }
+        public bool IsOnHoliDays { get; set; }
+        //poner url picture
+    }
 }
