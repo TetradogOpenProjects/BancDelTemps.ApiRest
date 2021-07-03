@@ -27,8 +27,7 @@ namespace BancDelTemps.ApiRest.Controllers
             Configuration = configuration;
         }
 
-        [HttpGet]
-        [Route("")]
+        [HttpGet("")]
         [Authorize]
         public IActionResult GetUser()
         {
@@ -43,8 +42,7 @@ namespace BancDelTemps.ApiRest.Controllers
             return result;
         }
 
-        [HttpGet]
-        [Route("All")]
+        [HttpGet("All")]
         [Authorize]
         public IActionResult GetAllUsers()
         {
@@ -68,8 +66,9 @@ namespace BancDelTemps.ApiRest.Controllers
             else result = Forbid();
             return result;
         }
-        [HttpGet]
-        [Route("Permisos/All")]
+
+
+        [HttpGet("Permisos/All")]
         [Authorize]
         public async Task<IActionResult> GetAllPermisos()
         {
@@ -87,8 +86,8 @@ namespace BancDelTemps.ApiRest.Controllers
             else result = Forbid();
             return result;
         }
-        [HttpGet]
-        [Route("Login")]
+       
+        [HttpGet("Login")]
         public IActionResult GoogleLogin()
         {
             AuthenticationProperties properties;
@@ -96,8 +95,7 @@ namespace BancDelTemps.ApiRest.Controllers
             return Challenge(properties, GoogleDefaults.AuthenticationScheme);
         }
 
-        [HttpGet]
-        [Route("Token")]
+        [HttpGet("Token")]
         public async Task<IActionResult> GetToken()
         {
             IActionResult result;
@@ -136,8 +134,7 @@ namespace BancDelTemps.ApiRest.Controllers
 
         }
 
-        [HttpPut]
-        [Route("Permisos")]
+        [HttpPut("Permisos")]
         [Authorize]
         public IActionResult PermissionsPut(PermisoUserDTO permisoUserDTO)
         {
@@ -198,8 +195,8 @@ namespace BancDelTemps.ApiRest.Controllers
             else result = Forbid();
             return result;
         }
-        [HttpDelete]
-        [Route("Permisos")]
+      
+        [HttpDelete("Permisos")]
         [Authorize]
         public IActionResult PermissionsDelete(PermisoUserDTO permisoUserDTO)
         {
@@ -253,6 +250,65 @@ namespace BancDelTemps.ApiRest.Controllers
                 else result = Unauthorized();
             }
             else result = Forbid();
+            return result;
+        }
+
+        [HttpGet("All/ToValidate")]
+        [Authorize]
+        public IActionResult GetAllInValidatedUsers()
+        {
+            IActionResult result;
+            User user;
+            if (HttpContext.User.Identity.IsAuthenticated)
+            {
+                user = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(HttpContext));
+                if (user.IsModValidate)
+                {
+                    result = Ok(Context.Users.Where(u => !u.IsValidated).OrderBy(u=>u.JoinDate).Select(u => new UserBasicDTO(u)));
+                }
+                else
+                {
+                    result = Unauthorized();
+                }
+            }
+            else result = Forbid();
+            return result;
+        }
+        [HttpPut("Validate/{userId:int}")]
+        [Authorize]
+        public async Task<IActionResult> ValidarUsuario(int userId)
+        {
+            IActionResult result;
+            User modValidation, user;
+            if (HttpContext.User.Identity.IsAuthenticated)
+            {
+                modValidation = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(HttpContext));
+                if (modValidation.IsModValidate)
+                {
+                    user = await Context.Users.FindAsync(userId);
+                    if (Equals(user, default))
+                    {
+                        result = NotFound();
+                    }
+                    else if(!user.IsValidated)
+                    {
+                        
+                        user.Validator = modValidation;
+                        Context.Users.Update(user);
+                        await Context.SaveChangesAsync();
+                        result = Ok();
+                    }
+                    else
+                    {
+                        result = Forbid();//ya está validado!!
+                    }
+                }
+                else result = Unauthorized();
+            }
+            else
+            {
+                result = Forbid();
+            }
             return result;
         }
 

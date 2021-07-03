@@ -19,8 +19,7 @@ namespace BancDelTemps.ApiRest.Controllers
         Context Context { get; set; }
         public TransaccionesController(Context context) => Context = context;
 
-        [HttpGet]
-        [Route("")]
+        [HttpGet("All")]
         public IActionResult GetAll()
         {
             IActionResult result;
@@ -33,8 +32,8 @@ namespace BancDelTemps.ApiRest.Controllers
             else result = Forbid();
             return result;
         }
-        [HttpGet]
-        [Route("Delegadas")]
+
+        [HttpGet("Delegadas")]
         public IActionResult GetAllDelegadas()
         {
             IActionResult result;
@@ -50,8 +49,8 @@ namespace BancDelTemps.ApiRest.Controllers
             }
             return result;
         }
-        [HttpGet]
-        [Route("{userId:int}")]
+
+        [HttpGet("{userId:int}")]
         public IActionResult GetAllUser(int userId)
         {
             IActionResult result;
@@ -68,8 +67,8 @@ namespace BancDelTemps.ApiRest.Controllers
             else result = Forbid();
             return result;
         }
-        [HttpGet]
-        [Route("Delegadas/{userId:int}")]
+
+        [HttpGet("Delegadas/{userId:int}")]
         public IActionResult GetAllDelegadas(int userId)
         {
             IActionResult result;
@@ -90,6 +89,7 @@ namespace BancDelTemps.ApiRest.Controllers
             }
             return result;
         }
+
         [HttpPost("")]
         public async Task<IActionResult> AddTransaccion(TransaccionDTO transaccion)
         {
@@ -154,6 +154,7 @@ namespace BancDelTemps.ApiRest.Controllers
             else result = Forbid();
             return result;
         }
+
         [HttpPut("")]
         public async Task<IActionResult> UpdateTransaccion(TransaccionDTO transaccionDTO)
         {
@@ -182,6 +183,7 @@ namespace BancDelTemps.ApiRest.Controllers
                 return result;
             });
         }
+
         [HttpDelete("")]
         public async Task<IActionResult> DeleteTransaccion(TransaccionDTO transaccionDTO)
         {
@@ -193,7 +195,7 @@ namespace BancDelTemps.ApiRest.Controllers
 
         }
 
-        async Task<IActionResult> ModifyTransaccion(TransaccionDTO transaccionDTO, ModifyTransaccionDelegate modifyTransaccion)
+        async Task<IActionResult> ModifyTransaccion(TransaccionDTO transaccionDTO, ModifyTransaccionDelegate metodoModifyTransaccion)
         {
             IActionResult result;
             User user;
@@ -222,7 +224,7 @@ namespace BancDelTemps.ApiRest.Controllers
                     {
                         if (user.Id == transaccion.UserFromId||(transaccion.TransaccionDelegadaId.HasValue &&transaccion.TransaccionDelegada.IsActiva && transaccion.TransaccionDelegada.User.Id==user.Id) || user.IsModTransaccion)
                         {
-                            result = modifyTransaccion(transaccion, transaccionDTO);
+                            result = metodoModifyTransaccion(transaccion, transaccionDTO);
                             if(result is OkResult)
                                await Context.SaveChangesAsync();
                             
@@ -306,6 +308,7 @@ namespace BancDelTemps.ApiRest.Controllers
 
             return result;
         }
+
         [HttpPut("Delegar")]
         public async Task<IActionResult> UpdateTransaccionDelegada(TransaccionDelegadaDTO transaccionDelegadaDTO)
         {
@@ -332,6 +335,7 @@ namespace BancDelTemps.ApiRest.Controllers
                 return result;
             });
         }
+
         [HttpDelete("Delegar")]
         public async Task<IActionResult> DeleteTransaccionDelegada(TransaccionDelegadaDTO transaccionDelegadaDTO)
         {
@@ -341,6 +345,7 @@ namespace BancDelTemps.ApiRest.Controllers
                 return Ok();
             });
         }
+
         async Task<IActionResult> ModifyTransaccionDelegada(TransaccionDelegadaDTO transaccionDelegadaDTO,ModifyTransaccionDelegadaDelegate metodoModifyTransaccion)
         {
             IActionResult result;

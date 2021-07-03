@@ -10,8 +10,8 @@ namespace BancDelTemps.ApiRest.Models
         public const string ADMIN = "admin";
 
         public const string MODTRANSACCION = "mod transaccion";
-
-        public static string[] Todos =>new string[]{ADMIN,MODTRANSACCION};
+        public const string MODVALIDATION = "mod validation";
+        public static string[] Todos =>new string[]{ADMIN,MODTRANSACCION,MODVALIDATION};
 
         public int Id { get; set; }
         public string Nombre { get; set; }

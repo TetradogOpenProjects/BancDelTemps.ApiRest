@@ -72,6 +72,8 @@ namespace BancDelTemps.ApiRest.Models
         public bool IsAdmin => PermisosActivosName.Any(p => Permiso.ADMIN.Equals(p));
         [NotMapped]
         public bool IsModTransaccion => PermisosActivosName.Any(p => Permiso.MODTRANSACCION.Equals(p));
+        [NotMapped]
+        public bool IsModValidate => PermisosActivosName.Any(p => Permiso.MODVALIDATION.Equals(p));
         public ICollection<Transaccion> TransaccionesFrom { get; set; }
         public ICollection<Transaccion> TransaccionesIn { get; set; }
         public ICollection<TransaccionDelegada> TransaccionesSigned { get; set; }
@@ -152,12 +154,14 @@ namespace BancDelTemps.ApiRest.Models
             Name = user.Name;
             Surname = user.Surname;
             IsOnHoliDays = user.IsOnHolidays;
+            JoinDate = user.JoinDate;
         }
 
         public int Id { get; set; }
         public string Name { get; set; }
         public string Surname { get; set; }
         public bool IsOnHoliDays { get; set; }
+        public DateTime JoinDate { get; set; }
         //poner url picture
     }
 }
