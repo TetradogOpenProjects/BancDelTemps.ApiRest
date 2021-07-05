@@ -41,7 +41,7 @@ namespace BancDelTemps.ApiRest.Models
 
         public string IdExterno { get; set; }
 
-        public int Id { get; set; }
+        public long Id { get; set; }
         public DateTime JoinDate { get; set; }
         [Required]
         public string Name { get; set; }
@@ -50,7 +50,7 @@ namespace BancDelTemps.ApiRest.Models
         [Required]
         public string Email { get; set; }
 
-        public int? ValidatorId { get; set; }
+        public long? ValidatorId { get; set; }
         public User Validator { get; set; }
         [NotMapped]
         public bool IsValidated => ValidatorId.HasValue;
@@ -134,7 +134,7 @@ namespace BancDelTemps.ApiRest.Models
             Permisos = user.PermisosActivosName;
             TotalMinutos = user.TotalMinutos;
         }
-        public int Id { get; set; }
+        public long Id { get; set; }
         public string Name { get; set; }
         public string Surname { get; set; }
         public bool IsValidated { get; set; }
@@ -157,7 +157,7 @@ namespace BancDelTemps.ApiRest.Models
             JoinDate = user.JoinDate;
         }
 
-        public int Id { get; set; }
+        public long Id { get; set; }
         public string Name { get; set; }
         public string Surname { get; set; }
         public bool IsOnHoliDays { get; set; }

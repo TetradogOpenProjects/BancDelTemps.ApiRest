@@ -24,7 +24,7 @@ namespace BancDelTemps.ApiRest
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-            //User
+            #region User
             modelBuilder.Entity<User>().HasOne(u => u.Validator).WithMany(u => u.Validated);
             modelBuilder.Entity<User>().HasMany(u => u.Permisos).WithOne(up => up.User);
             modelBuilder.Entity<User>().HasMany(u => u.Granted).WithOne(up => up.GrantedBy);
@@ -33,6 +33,8 @@ namespace BancDelTemps.ApiRest
             modelBuilder.Entity<User>().HasMany(u => u.TransaccionesFrom).WithOne(up => up.UserFrom);
             modelBuilder.Entity<User>().HasMany(u => u.TransaccionesSigned).WithOne(up => up.User);
             modelBuilder.Entity<User>().HasMany(u => u.TransaccionesValidator).WithOne(up => up.UserValidator);
+            modelBuilder.Entity<User>().HasMany(u => u.OperacionesHechas).WithOne(o => o.User);
+            modelBuilder.Entity<User>().HasMany(u => u.OpereacionesRevisadas).WithOne(o => o.Revisor);
 
             modelBuilder.Entity<User>().Navigation(u => u.Granted).UsePropertyAccessMode(PropertyAccessMode.Property);
             modelBuilder.Entity<User>().Navigation(u => u.Revoked).UsePropertyAccessMode(PropertyAccessMode.Property);
@@ -43,16 +45,21 @@ namespace BancDelTemps.ApiRest
             modelBuilder.Entity<User>().Navigation(u => u.TransaccionesFrom).UsePropertyAccessMode(PropertyAccessMode.Property);
             modelBuilder.Entity<User>().Navigation(u => u.TransaccionesSigned).UsePropertyAccessMode(PropertyAccessMode.Property);
             modelBuilder.Entity<User>().Navigation(u => u.TransaccionesValidator).UsePropertyAccessMode(PropertyAccessMode.Property);
-            //Permisos
+            modelBuilder.Entity<User>().Navigation(u => u.OperacionesHechas).UsePropertyAccessMode(PropertyAccessMode.Property);
+            modelBuilder.Entity<User>().Navigation(u => u.OpereacionesRevisadas).UsePropertyAccessMode(PropertyAccessMode.Property);
+            #endregion
+            #region Permisos
             modelBuilder.Entity<Permiso>().HasMany(u => u.Users).WithOne(up => up.Permiso);
             modelBuilder.Entity<Permiso>().Navigation(u => u.Users).UsePropertyAccessMode(PropertyAccessMode.Property);
-            //UserPermisos
+            #endregion
+            #region UserPermisos
             modelBuilder.Entity<UserPermiso>().HasKey(nameof(UserPermiso.UserId), nameof(UserPermiso.PermisoId));
             modelBuilder.Entity<UserPermiso>().Navigation(u => u.GrantedBy).UsePropertyAccessMode(PropertyAccessMode.Property);
             modelBuilder.Entity<UserPermiso>().Navigation(u => u.RevokedBy).UsePropertyAccessMode(PropertyAccessMode.Property);
             modelBuilder.Entity<UserPermiso>().Navigation(u => u.Permiso).UsePropertyAccessMode(PropertyAccessMode.Property);
             modelBuilder.Entity<UserPermiso>().Navigation(u => u.User).UsePropertyAccessMode(PropertyAccessMode.Property);
-            //transacciones
+            #endregion
+            # region Transacciones
             modelBuilder.Entity<Transaccion>().HasOne(t => t.TransaccionDelegada).WithOne(t => t.Transaccion);
             modelBuilder.Entity<Transaccion>().HasOne(t => t.Operacion).WithMany();
             modelBuilder.Entity<Transaccion>().Navigation(u => u.Operacion).UsePropertyAccessMode(PropertyAccessMode.Property);
@@ -60,12 +67,13 @@ namespace BancDelTemps.ApiRest
             modelBuilder.Entity<Transaccion>().Navigation(u => u.TransaccionDelegada).UsePropertyAccessMode(PropertyAccessMode.Property);
             modelBuilder.Entity<Transaccion>().Navigation(u => u.UserTo).UsePropertyAccessMode(PropertyAccessMode.Property);
             modelBuilder.Entity<Transaccion>().Navigation(u => u.UserValidator).UsePropertyAccessMode(PropertyAccessMode.Property);
-            //transaccion delegada
+            #endregion
+            #region Transaccion delegada
             modelBuilder.Entity<TransaccionDelegada>().HasOne(t => t.Operacion).WithMany();
             modelBuilder.Entity<TransaccionDelegada>().Navigation(u => u.Operacion).UsePropertyAccessMode(PropertyAccessMode.Property);
             modelBuilder.Entity<TransaccionDelegada>().Navigation(u => u.User).UsePropertyAccessMode(PropertyAccessMode.Property);
             modelBuilder.Entity<TransaccionDelegada>().Navigation(u => u.Transaccion).UsePropertyAccessMode(PropertyAccessMode.Property);
-           
+            #endregion
 
 
             //añado datos al principio
@@ -89,7 +97,7 @@ namespace BancDelTemps.ApiRest
             return GetUsersPermisos().Where(u => u.Email.Equals(email))
                              .FirstOrDefault();
         }
-        public User GetUserPermiso(int idUser)
+        public User GetUserPermiso(long idUser)
         {
             return GetUsersPermisos().Where(u => u.Id == idUser).FirstOrDefault();
         }
@@ -115,7 +123,7 @@ namespace BancDelTemps.ApiRest
             return Transacciones.Where(t => t.OperacionId.Equals(operacion.Id)).FirstOrDefault();
         }
 
-        public User GetUserPermisoWithTransacciones(int idUser)
+        public User GetUserPermisoWithTransacciones(long idUser)
         {
             return GetUsersPermisosWithTransacciones().Where(u => u.Id.Equals(idUser))
                                                       .FirstOrDefault();
@@ -144,7 +152,7 @@ namespace BancDelTemps.ApiRest
         {
             return !Equals(Users.Where(u=>u.Email.Equals(email)).FirstOrDefault(), default);
         }
-        public bool ExistUser(int idUsuario)
+        public bool ExistUser(long idUsuario)
         {
             return !Equals(Users.Find(idUsuario), default);
         }

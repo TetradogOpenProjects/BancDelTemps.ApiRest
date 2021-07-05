@@ -13,14 +13,14 @@ namespace BancDelTemps.ApiRest.Models
             Permiso = permiso;
         }
 
-        public int UserId { get; set; }
+        public long UserId { get; set; }
         public User User { get; set; }
         public int PermisoId { get; set; }
         public Permiso Permiso { get; set; }
-        public int GrantedById { get; set; }
+        public long GrantedById { get; set; }
         public User GrantedBy { get; set; }
         public DateTime GrantedDate { get; set; }
-        public int? RevokedById { get; set; }
+        public long? RevokedById { get; set; }
         public User RevokedBy { get; set; }
         public DateTime? RevokedDate { get; set; }
 

@@ -16,7 +16,7 @@ namespace BancDelTemps.ApiRest.Models
             Signed = user.TransaccionesSigned.Select(s => new TransaccionDTO(s.Transaccion));
 
         }
-        public int IdUser { get; set; }
+        public long IdUser { get; set; }
         public IEnumerable<TransaccionDTO> In { get; set; }
         public IEnumerable<TransaccionDTO> Out { get; set; }
         public IEnumerable<TransaccionDTO> Signed { get; set; }
@@ -36,11 +36,11 @@ namespace BancDelTemps.ApiRest.Models
             Minutos = s.Minutos;
             IdOperacion = s.OperacionId;
         }
-        public int IdFrom { get; set; }
-        public int IdTo { get; set; }
-        public int? IdValidator { get; set; }
-        public int? IdTransaccionDelegada { get; set; }
-        public Guid IdOperacion { get; set; }
+        public long IdFrom { get; set; }
+        public long IdTo { get; set; }
+        public long? IdValidator { get; set; }
+        public long? IdTransaccionDelegada { get; set; }
+        public long IdOperacion { get; set; }
         public DateTime Fecha { get; set; }
         public int Minutos { get; set; }
 
@@ -62,8 +62,8 @@ namespace BancDelTemps.ApiRest.Models
             FechaFin = transaccion.Fin;
         }
 
-        public Guid IdOperacion { get; set; }
-        public int IdUsuarioADelegar { get; set; }
+        public long IdOperacion { get; set; }
+        public long IdUsuarioADelegar { get; set; }
         public DateTime FechaInicio { get; set; }
         public DateTime? FechaFin { get; set; }
     }

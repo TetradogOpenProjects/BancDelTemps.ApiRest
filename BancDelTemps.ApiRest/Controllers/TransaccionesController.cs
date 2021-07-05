@@ -50,8 +50,8 @@ namespace BancDelTemps.ApiRest.Controllers
             return result;
         }
 
-        [HttpGet("{userId:int}")]
-        public IActionResult GetAllUser(int userId)
+        [HttpGet("{userId:long}")]
+        public IActionResult GetAllUser(long userId)
         {
             IActionResult result;
             User admin;
@@ -68,8 +68,8 @@ namespace BancDelTemps.ApiRest.Controllers
             return result;
         }
 
-        [HttpGet("Delegadas/{userId:int}")]
-        public IActionResult GetAllDelegadas(int userId)
+        [HttpGet("Delegadas/{userId:long}")]
+        public IActionResult GetAllDelegadas(long userId)
         {
             IActionResult result;
             User admin;

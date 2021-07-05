@@ -274,9 +274,9 @@ namespace BancDelTemps.ApiRest.Controllers
             else result = Forbid();
             return result;
         }
-        [HttpPut("Validate/{userId:int}")]
+        [HttpPut("Validate/{userId:long}")]
         [Authorize]
-        public async Task<IActionResult> ValidarUsuario(int userId)
+        public async Task<IActionResult> ValidarUsuario(long userId)
         {
             IActionResult result;
             User modValidation, user;
@@ -300,7 +300,7 @@ namespace BancDelTemps.ApiRest.Controllers
                     }
                     else
                     {
-                        result = Forbid();//ya está validado!!
+                        result = Ok();//ya está validado!!
                     }
                 }
                 else result = Unauthorized();
