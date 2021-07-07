@@ -51,7 +51,7 @@ namespace BancDelTemps.ApiRest.Controllers
             if (HttpContext.User.Identity.IsAuthenticated)
             {
                 user = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(HttpContext));
-                if (user.IsAdmin)
+                if (user.CanListUser)
                 {
                     result = Ok(Context.GetUsersPermisosWithTransacciones().Select(u => new UserDTO(u)));
                 }
@@ -143,6 +143,8 @@ namespace BancDelTemps.ApiRest.Controllers
             User userToAdd;
             Permiso permiso;
             UserPermiso userPermiso;
+            List<string> permisosOk;
+
             if (HttpContext.User.Identity.IsAuthenticated)
             {
                 userGranter = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(HttpContext));
@@ -158,29 +160,34 @@ namespace BancDelTemps.ApiRest.Controllers
                         }
                         else if(userToAdd.IsValidated)
                         {
-                            permiso = Context.Permisos.Where(p => p.Nombre.Equals(permisoUserDTO.Permiso)).FirstOrDefault();
-                            if (!Equals(permiso, default))
+                            permisosOk = new List<string>();
+                            for (int i = 0; i < permisoUserDTO.Permisos.Length; i++)
                             {
-                                try
+                                permiso = Context.Permisos.Where(p => p.Nombre.Equals(permisoUserDTO.Permisos[i])).FirstOrDefault();
+                                if (!Equals(permiso, default))
                                 {
-                                    userPermiso = Context.PermisosUsuarios.Where(p => p.PermisoId.Equals(permiso.Id) && p.UserId.Equals(userToAdd.Id)).FirstOrDefault();
-                                    if (!Equals(userPermiso, default))
+                                    try
                                     {
-                                        userPermiso.GrantedBy = userGranter;
-                                        userPermiso.GrantedDate = DateTime.UtcNow;
-                                        Context.PermisosUsuarios.Update(userPermiso);
-                                    }
-                                    else
-                                    {
-                                        Context.PermisosUsuarios.Add(new UserPermiso(userGranter, userToAdd, permiso));
-                                    }
-                                    Context.SaveChanges();
+                                        userPermiso = Context.PermisosUsuarios.Where(p => p.PermisoId.Equals(permiso.Id) && p.UserId.Equals(userToAdd.Id)).FirstOrDefault();
+                                        if (!Equals(userPermiso, default))
+                                        {
+                                            userPermiso.GrantedBy = userGranter;
+                                            userPermiso.GrantedDate = DateTime.UtcNow;
+                                            Context.PermisosUsuarios.Update(userPermiso);
+                                        }
+                                        else
+                                        {
+                                            Context.PermisosUsuarios.Add(new UserPermiso(userGranter, userToAdd, permiso));
+                                        }
+                                        Context.SaveChanges();
 
+                                    }
+                                    catch { }
+                                    permisosOk.Add(permisoUserDTO.Permisos[i]);
                                 }
-                                catch { }
-                                result = Ok();
+                              
                             }
-                            else result = NotFound();
+                            result = Ok(permisosOk);
                         }
                         else
                         {
@@ -205,6 +212,7 @@ namespace BancDelTemps.ApiRest.Controllers
             User userToRemove;
             Permiso permiso;
             UserPermiso userPermiso;
+            List<string> permisosOk;
 
             if (HttpContext.User.Identity.IsAuthenticated)
             {
@@ -221,27 +229,32 @@ namespace BancDelTemps.ApiRest.Controllers
                         }
                         else
                         {
-                            permiso = Context.Permisos.Where(p => p.Nombre.Equals(permisoUserDTO.Permiso)).FirstOrDefault();
-                            if (!Equals(permiso, default))
+                            permisosOk = new List<string>();
+                            for (int i = 0; i < permisoUserDTO.Permisos.Length; i++)
                             {
-                                userPermiso = Context.PermisosUsuarios.Where(p => p.PermisoId.Equals(permiso.Id) && p.UserId.Equals(userToRemove.Id)).FirstOrDefault();
-                                if (!Equals(userPermiso, default))
+                                permiso = Context.Permisos.Where(p => p.Nombre.Equals(permisoUserDTO.Permisos[i])).FirstOrDefault();
+                                if (!Equals(permiso, default))
                                 {
-                                    try
+                                    userPermiso = Context.PermisosUsuarios.Where(p => p.PermisoId.Equals(permiso.Id) && p.UserId.Equals(userToRemove.Id)).FirstOrDefault();
+                                    if (!Equals(userPermiso, default))
                                     {
-                                        userPermiso.RevokedBy = userRevoker;
-                                        userPermiso.RevokedDate = DateTime.UtcNow;
-                                        Context.PermisosUsuarios.Update(userPermiso);
-                                        Context.SaveChanges();
+                                        try
+                                        {
+                                            userPermiso.RevokedBy = userRevoker;
+                                            userPermiso.RevokedDate = DateTime.UtcNow;
+                                            Context.PermisosUsuarios.Update(userPermiso);
+                                            Context.SaveChanges();
+                                        }
+                                        catch { }
+                                        permisosOk.Add(permisoUserDTO.Permisos[i]);
+
                                     }
-                                    catch { }
-                                    result = Ok();
+                           
 
                                 }
-                                else result = NotFound();
-
+                              
                             }
-                            else result = NotFound();
+                            result = Ok(permisosOk);
                         }
                     }
                     else result = NotFound();

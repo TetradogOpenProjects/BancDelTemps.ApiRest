@@ -13,7 +13,6 @@ namespace BancDelTemps.ApiRest.Models
         public Operacion Operacion { get; set; }
         public long UserId { get; set; }
         public User User { get; set; }
-        public long? TransaccionId { get; set; }
         public Transaccion Transaccion { get; set; }
         public DateTime Inicio { get; set; }
         public DateTime? Fin { get; set; }

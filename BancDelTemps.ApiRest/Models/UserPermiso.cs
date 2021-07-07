@@ -29,6 +29,6 @@ namespace BancDelTemps.ApiRest.Models
     public class PermisoUserDTO
     {
         public string EmailUser { get; set; }
-        public string Permiso { get; set; }
+        public string[] Permisos { get; set; }
     }
 }

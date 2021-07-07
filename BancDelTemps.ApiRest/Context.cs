@@ -9,9 +9,9 @@ using System.Threading.Tasks;
 
 namespace BancDelTemps.ApiRest
 {
-    public class Context:DbContext
-    {    
-        public Context([NotNull] DbContextOptions options) : base(options) {  }
+    public class Context : DbContext
+    {
+        public Context([NotNull] DbContextOptions options) : base(options) { }
 
         protected Context() : base() { }
 
@@ -60,11 +60,9 @@ namespace BancDelTemps.ApiRest
             modelBuilder.Entity<UserPermiso>().Navigation(u => u.User).UsePropertyAccessMode(PropertyAccessMode.Property);
             #endregion
             # region Transacciones
-            modelBuilder.Entity<Transaccion>().HasOne(t => t.TransaccionDelegada).WithOne(t => t.Transaccion);
             modelBuilder.Entity<Transaccion>().HasOne(t => t.Operacion).WithMany();
             modelBuilder.Entity<Transaccion>().Navigation(u => u.Operacion).UsePropertyAccessMode(PropertyAccessMode.Property);
             modelBuilder.Entity<Transaccion>().Navigation(u => u.UserFrom).UsePropertyAccessMode(PropertyAccessMode.Property);
-            modelBuilder.Entity<Transaccion>().Navigation(u => u.TransaccionDelegada).UsePropertyAccessMode(PropertyAccessMode.Property);
             modelBuilder.Entity<Transaccion>().Navigation(u => u.UserTo).UsePropertyAccessMode(PropertyAccessMode.Property);
             modelBuilder.Entity<Transaccion>().Navigation(u => u.UserValidator).UsePropertyAccessMode(PropertyAccessMode.Property);
             #endregion
@@ -88,11 +86,11 @@ namespace BancDelTemps.ApiRest
             modelBuilder.Entity<Permiso>().HasData(Permiso.Todos.Select(p => new Permiso() { Nombre = p }));
         }
 
-        public User GetUserPermiso([NotNull]User user)
+        public User GetUserPermiso([NotNull] User user)
         {
             return GetUserPermiso(user.Email);
         }
-        public User GetUserPermiso([NotNull]string email)
+        public User GetUserPermiso([NotNull] string email)
         {
             return GetUsersPermisos().Where(u => u.Email.Equals(email))
                              .FirstOrDefault();
@@ -105,8 +103,8 @@ namespace BancDelTemps.ApiRest
         {
             return Users.Include(u => u.Permisos)
                         .ThenInclude(p => p.Permiso);
-       
-                       
+
+
         }
         public User GetUserPermisoWithTransacciones([NotNull] User user)
         {
@@ -122,7 +120,10 @@ namespace BancDelTemps.ApiRest
         {
             return Transacciones.Where(t => t.OperacionId.Equals(operacion.Id)).FirstOrDefault();
         }
-
+        public TransaccionDelegada GetTransaccionDelegada(Operacion operacion)
+        {
+            return TransaccionesDelegadas.Where(t => t.OperacionId.Equals(operacion.Id)).FirstOrDefault();
+        }
         public User GetUserPermisoWithTransacciones(long idUser)
         {
             return GetUsersPermisosWithTransacciones().Where(u => u.Id.Equals(idUser))
@@ -133,13 +134,13 @@ namespace BancDelTemps.ApiRest
             //cuando esté todo desarrollado poner el filtro más grande
             return GetUserPermisoWithTransacciones(email);
         }
-        public IIncludableQueryable<User,ICollection<Transaccion>> GetUsersPermisosWithTransacciones()
+        public IIncludableQueryable<User, ICollection<Transaccion>> GetUsersPermisosWithTransacciones()
         {
-            return GetUsersPermisos().Include(u=>u.TransaccionesIn)
-                                     .Include(u=>u.TransaccionesFrom)
+            return GetUsersPermisos().Include(u => u.TransaccionesIn)
+                                     .Include(u => u.TransaccionesFrom)
                                      .Include(u => u.TransaccionesSigned)
-                                     .ThenInclude(t=>t.Transaccion)
-                                     .ThenInclude(t=>t.Operacion)
+                                     .ThenInclude(t => t.Transaccion)
+                                     .ThenInclude(t => t.Operacion)
                                      .Include(u => u.TransaccionesValidator);
 
 
@@ -150,7 +151,7 @@ namespace BancDelTemps.ApiRest
         }
         public bool ExistUser([NotNull] string email)
         {
-            return !Equals(Users.Where(u=>u.Email.Equals(email)).FirstOrDefault(), default);
+            return !Equals(Users.Where(u => u.Email.Equals(email)).FirstOrDefault(), default);
         }
         public bool ExistUser(long idUsuario)
         {

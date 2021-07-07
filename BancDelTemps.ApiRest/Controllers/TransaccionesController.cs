@@ -41,7 +41,7 @@ namespace BancDelTemps.ApiRest.Controllers
             if (HttpContext.User.Identity.IsAuthenticated)
             {
                 user = Context.GetUserPermisoWithTransacciones(Models.User.GetEmailFromHttpContext(HttpContext));
-                result = Ok(user.TransaccionesSigned.Select(t=>new TransaccionDelegadaDTO(t)));
+                result = Ok(user.TransaccionesSigned.Select(t => new TransaccionDelegadaDTO(t)));
             }
             else
             {
@@ -91,13 +91,13 @@ namespace BancDelTemps.ApiRest.Controllers
         }
 
         [HttpPost("")]
-        public async Task<IActionResult> AddTransaccion(TransaccionDTO transaccion)
+        public async Task<IActionResult> AddTransaccion(TransaccionDTO transaccionDTO)
         {
             IActionResult result;
             User user;
             TransaccionDelegada transaccionDelegada;
             Operacion operacion;
-            if (Equals(transaccion, default))
+            if (Equals(transaccionDTO, default))
             {
                 result = BadRequest();
             }
@@ -106,7 +106,7 @@ namespace BancDelTemps.ApiRest.Controllers
                 user = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(HttpContext));
                 if (user.IsValidated)
                 {
-                    operacion = await Context.Operaciones.FindAsync(transaccion.IdOperacion);
+                    operacion = await Context.Operaciones.FindAsync(transaccionDTO.IdOperacion);
                     if (Equals(operacion, default))
                     {
                         result = NotFound();
@@ -118,22 +118,22 @@ namespace BancDelTemps.ApiRest.Controllers
                     }
                     else
                     {
-                        if (user.Id == transaccion.IdFrom || user.IsModTransaccion)
+                        if (user.Id == transaccionDTO.IdFrom || user.IsModTransaccion)
                         {
                             operacion.Completada = true;
                             Context.Operaciones.Update(operacion);
-                            await Context.Transacciones.AddAsync(transaccion.ToTransaccion());
+                            await Context.Transacciones.AddAsync(transaccionDTO.ToTransaccion());
                             await Context.SaveChangesAsync();
                             result = Ok();
                         }
-                        else if (transaccion.IdTransaccionDelegada.HasValue)
+                        else
                         {
-                            transaccionDelegada = await Context.TransaccionesDelegadas.FindAsync(transaccion.IdTransaccionDelegada.Value);
-                            if (user.Id == transaccionDelegada.UserId && transaccionDelegada.IsActiva)
+                            transaccionDelegada = Context.GetTransaccionDelegada(operacion);
+                            if (!Equals(transaccionDelegada, default) && user.Id == transaccionDelegada.UserId && transaccionDelegada.IsActiva)
                             {
                                 operacion.Completada = true;
                                 Context.Operaciones.Update(operacion);
-                                await Context.Transacciones.AddAsync(transaccion.ToTransaccion());
+                                await Context.Transacciones.AddAsync(transaccionDTO.ToTransaccion());
                                 await Context.SaveChangesAsync();
                                 result = Ok();
                             }
@@ -143,7 +143,7 @@ namespace BancDelTemps.ApiRest.Controllers
                             }
 
                         }
-                        else result = Unauthorized();
+
                     }
                 }
                 else
@@ -201,6 +201,7 @@ namespace BancDelTemps.ApiRest.Controllers
             User user;
             Operacion operacion;
             Transaccion transaccion;
+            TransaccionDelegada transaccionDelegada;
             if (Equals(transaccionDTO, default))
             {
                 result = BadRequest();
@@ -222,12 +223,13 @@ namespace BancDelTemps.ApiRest.Controllers
                     }
                     else
                     {
-                        if (user.Id == transaccion.UserFromId||(transaccion.TransaccionDelegadaId.HasValue &&transaccion.TransaccionDelegada.IsActiva && transaccion.TransaccionDelegada.User.Id==user.Id) || user.IsModTransaccion)
+                        transaccionDelegada = Context.GetTransaccionDelegada(operacion);
+                        if (user.Id == transaccion.UserFromId || (!Equals(transaccionDelegada, default) && transaccionDelegada.IsActiva && transaccionDelegada.User.Id == user.Id) || user.IsModTransaccion)
                         {
                             result = metodoModifyTransaccion(transaccion, transaccionDTO);
-                            if(result is OkResult)
-                               await Context.SaveChangesAsync();
-                            
+                            if (result is OkResult)
+                                await Context.SaveChangesAsync();
+
                         }
                         else
                         {
@@ -247,7 +249,7 @@ namespace BancDelTemps.ApiRest.Controllers
             return result;
         }
 
-       
+
         [HttpPost("Delegar")]
         public async Task<IActionResult> AddTransaccionDelegada(TransaccionDelegadaDTO transaccionDelegadaDTO)
         {
@@ -267,13 +269,15 @@ namespace BancDelTemps.ApiRest.Controllers
                 if (Equals(operacion, default))
                 {
                     result = NotFound();
-                } else if (operacion.Completada) {
+                }
+                else if (operacion.Completada)
+                {
                     result = Forbid();
                 }
                 else if (userFrom.Id == operacion.UserId || userFrom.IsModTransaccion)
                 {
                     userDelegado = Context.GetUserPermiso(transaccionDelegadaDTO.IdUsuarioADelegar);
-                    if (!Equals(userDelegado,default))
+                    if (!Equals(userDelegado, default))
                     {
                         if (userDelegado.IsValidated)
                         {
@@ -346,13 +350,13 @@ namespace BancDelTemps.ApiRest.Controllers
             });
         }
 
-        async Task<IActionResult> ModifyTransaccionDelegada(TransaccionDelegadaDTO transaccionDelegadaDTO,ModifyTransaccionDelegadaDelegate metodoModifyTransaccion)
+        async Task<IActionResult> ModifyTransaccionDelegada(TransaccionDelegadaDTO transaccionDelegadaDTO, ModifyTransaccionDelegadaDelegate metodoModifyTransaccion)
         {
             IActionResult result;
             User user;
-            
             Operacion operacion;
             TransaccionDelegada transaccionDelegada;
+
             if (HttpContext.User.Identity.IsAuthenticated)
             {
                 user = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(HttpContext));
@@ -371,17 +375,11 @@ namespace BancDelTemps.ApiRest.Controllers
                     }
                     else if (user.Id == operacion.UserId || user.IsModTransaccion)
                     {
-                        if (transaccionDelegada.OperacionId.Equals(operacion.Id))
-                        {
-                            result = metodoModifyTransaccion(transaccionDelegada, transaccionDelegadaDTO);
-                            if(result is OkResult)
-                              await Context.SaveChangesAsync();
-                       
-                        }
-                        else
-                        {
-                            result = BadRequest();
-                        }
+
+                        result = metodoModifyTransaccion(transaccionDelegada, transaccionDelegadaDTO);
+                        if (result is OkResult)
+                            await Context.SaveChangesAsync();
+
                     }
                     else result = Forbid();
                 }

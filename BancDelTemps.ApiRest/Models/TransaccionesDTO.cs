@@ -31,7 +31,6 @@ namespace BancDelTemps.ApiRest.Models
             IdFrom = s.UserFromId;
             IdTo = s.UserToId;
             IdValidator = s.UserValidatorId;
-            IdTransaccionDelegada = s.TransaccionDelegadaId;
             Fecha = s.Fecha;
             Minutos = s.Minutos;
             IdOperacion = s.OperacionId;
@@ -39,14 +38,13 @@ namespace BancDelTemps.ApiRest.Models
         public long IdFrom { get; set; }
         public long IdTo { get; set; }
         public long? IdValidator { get; set; }
-        public long? IdTransaccionDelegada { get; set; }
         public long IdOperacion { get; set; }
         public DateTime Fecha { get; set; }
         public int Minutos { get; set; }
 
         public Transaccion ToTransaccion()
         {
-            return new Transaccion() { UserFromId = IdFrom, UserToId = IdTo, Fecha = Fecha, Minutos =Minutos,TransaccionDelegadaId=IdTransaccionDelegada,UserValidatorId=IdValidator,OperacionId=IdOperacion };
+            return new Transaccion() { UserFromId = IdFrom, UserToId = IdTo, Fecha = Fecha, Minutos =Minutos,UserValidatorId=IdValidator,OperacionId=IdOperacion };
         }
     }
 
