@@ -144,6 +144,7 @@ namespace BancDelTemps.ApiRest.Controllers
             Permiso permiso;
             UserPermiso userPermiso;
             List<string> permisosOk;
+            string permisoLow;
 
             if (HttpContext.User.Identity.IsAuthenticated)
             {
@@ -163,7 +164,8 @@ namespace BancDelTemps.ApiRest.Controllers
                             permisosOk = new List<string>();
                             for (int i = 0; i < permisoUserDTO.Permisos.Length; i++)
                             {
-                                permiso = Context.Permisos.Where(p => p.Nombre.Equals(permisoUserDTO.Permisos[i])).FirstOrDefault();
+                                permisoLow = permisoUserDTO.Permisos[i].ToLower();
+                                permiso = Context.Permisos.Where(p => p.Nombre.Equals(permisoLow)).FirstOrDefault();
                                 if (!Equals(permiso, default))
                                 {
                                     try
@@ -213,6 +215,7 @@ namespace BancDelTemps.ApiRest.Controllers
             Permiso permiso;
             UserPermiso userPermiso;
             List<string> permisosOk;
+            string permisoLow;
 
             if (HttpContext.User.Identity.IsAuthenticated)
             {
@@ -232,7 +235,8 @@ namespace BancDelTemps.ApiRest.Controllers
                             permisosOk = new List<string>();
                             for (int i = 0; i < permisoUserDTO.Permisos.Length; i++)
                             {
-                                permiso = Context.Permisos.Where(p => p.Nombre.Equals(permisoUserDTO.Permisos[i])).FirstOrDefault();
+                                permisoLow = permisoUserDTO.Permisos[i].ToLower();
+                                permiso = Context.Permisos.Where(p => p.Nombre.Equals(permisoLow)).FirstOrDefault();
                                 if (!Equals(permiso, default))
                                 {
                                     userPermiso = Context.PermisosUsuarios.Where(p => p.PermisoId.Equals(permiso.Id) && p.UserId.Equals(userToRemove.Id)).FirstOrDefault();
