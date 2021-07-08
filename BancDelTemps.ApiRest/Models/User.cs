@@ -43,11 +43,11 @@ namespace BancDelTemps.ApiRest.Models
 
         public long Id { get; set; }
         public DateTime JoinDate { get; set; }
-        [Required]
+        [Required,MaxLength(50)]
         public string Name { get; set; }
-        [Required]
+        [Required, MaxLength(150)]
         public string Surname { get; set; }
-        [Required]
+        [Required, MaxLength(320)]
         public string Email { get; set; }
 
         public long? ValidatorId { get; set; }
@@ -68,14 +68,16 @@ namespace BancDelTemps.ApiRest.Models
         public IEnumerable<string> PermisosActivosName => PermisosActivos.Select(p => p.Permiso.Nombre);
         public ICollection<UserPermiso> Granted { get; set; }
         public ICollection<UserPermiso> Revoked { get; set; }
+
         [NotMapped]
-        public bool IsAdmin => PermisosActivosName.Any(p => Permiso.ADMIN.Equals(p));
+        public bool IsAdmin =>PermisosActivosName.Any(p => Permiso.ADMIN.Equals(p));
         [NotMapped]
-        public bool IsModTransaccion => PermisosActivosName.Any(p => Permiso.MODTRANSACCION.Equals(p));
+        public bool IsModTransaccion =>IsAdmin || PermisosActivosName.Any(p => Permiso.MODTRANSACCION.Equals(p));
         [NotMapped]
-        public bool IsModValidate => PermisosActivosName.Any(p => Permiso.MODVALIDATION.Equals(p));
+        public bool IsModValidation => IsAdmin || PermisosActivosName.Any(p => Permiso.MODVALIDATION.Equals(p));
         [NotMapped]
-        public bool CanListUser=> PermisosActivosName.Any(p => Permiso.CANLISTUSER.Equals(p));
+        public bool CanListUser=> IsAdmin || PermisosActivosName.Any(p => Permiso.CANLISTUSER.Equals(p));
+
         public ICollection<Transaccion> TransaccionesFrom { get; set; }
         public ICollection<Transaccion> TransaccionesIn { get; set; }
         public ICollection<TransaccionDelegada> TransaccionesSigned { get; set; }
@@ -112,12 +114,12 @@ namespace BancDelTemps.ApiRest.Models
                                         claims, expires: DateTime.UtcNow + (Equals(expiraToken, default(TimeSpan)) ? DefaultExpireTokenTime : expiraToken),
                                         signingCredentials: signIn);
         }
-        public static string GetEmailFromHttpContext(HttpContext context)
+        public static string GetEmailFromHttpContext(IHttpContext context)
         {
             const int EMAIL = 4;//si cambio el orden de los claim en nameof(GetToken) tengo que mirar donde queda el Email de nuevo!!
-            Claim[] claims = context.User.Identities.FirstOrDefault().Claims.ToArray();
+            string[] claims = context.GetClaimsValueFirstIdentity();
 
-            return claims[EMAIL].Value;
+            return claims[EMAIL];
         }
 
     }

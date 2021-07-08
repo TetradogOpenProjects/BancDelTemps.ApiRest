@@ -17,17 +17,21 @@ namespace BancDelTemps.ApiRest.Controllers
         delegate StatusCodeResult ModifyTransaccionDelegate(Transaccion transaccion, TransaccionDTO transaccionDTO);
         delegate StatusCodeResult ModifyTransaccionDelegadaDelegate(TransaccionDelegada transaccion, TransaccionDelegadaDTO transaccionDTO);
         Context Context { get; set; }
-        public TransaccionesController(Context context) => Context = context;
+        public IHttpContext ContextoHttp { get; set; }
+        public TransaccionesController(Context context) {
+            Context = context; 
+            ContextoHttp = new ContextoHttp(HttpContext); 
+        }
 
         [HttpGet("All")]
         public IActionResult GetAll()
         {
             IActionResult result;
             User user;
-            if (HttpContext.User.Identity.IsAuthenticated)
+            if (ContextoHttp.IsAuthenticated)
             {
-                user = Context.GetUserPermisoWithTransacciones(Models.User.GetEmailFromHttpContext(HttpContext));
-                result = Ok(new TransaccionesDTO(user));
+                user = Context.GetUserPermisoWithTransacciones(Models.User.GetEmailFromHttpContext(ContextoHttp));
+                result = Ok(new TransaccionesDTO(user,Context));
             }
             else result = Forbid();
             return result;
@@ -38,9 +42,9 @@ namespace BancDelTemps.ApiRest.Controllers
         {
             IActionResult result;
             User user;
-            if (HttpContext.User.Identity.IsAuthenticated)
+            if (ContextoHttp.IsAuthenticated)
             {
-                user = Context.GetUserPermisoWithTransacciones(Models.User.GetEmailFromHttpContext(HttpContext));
+                user = Context.GetUserPermisoWithTransacciones(Models.User.GetEmailFromHttpContext(ContextoHttp));
                 result = Ok(user.TransaccionesSigned.Select(t => new TransaccionDelegadaDTO(t)));
             }
             else
@@ -55,12 +59,12 @@ namespace BancDelTemps.ApiRest.Controllers
         {
             IActionResult result;
             User admin;
-            if (HttpContext.User.Identity.IsAuthenticated)
+            if (ContextoHttp.IsAuthenticated)
             {
-                admin = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(HttpContext));
+                admin = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(ContextoHttp));
                 if (admin.IsAdmin)
                 {
-                    result = Ok(new TransaccionesDTO(Context.GetUserPermisoWithTransacciones(userId)));
+                    result = Ok(new TransaccionesDTO(Context.GetUserPermisoWithTransacciones(userId),Context));
                 }
                 else result = Unauthorized();
             }
@@ -73,9 +77,9 @@ namespace BancDelTemps.ApiRest.Controllers
         {
             IActionResult result;
             User admin;
-            if (HttpContext.User.Identity.IsAuthenticated)
+            if (ContextoHttp.IsAuthenticated)
             {
-                admin = Context.GetUserPermisoWithTransacciones(Models.User.GetEmailFromHttpContext(HttpContext));
+                admin = Context.GetUserPermisoWithTransacciones(Models.User.GetEmailFromHttpContext(ContextoHttp));
                 if (admin.IsAdmin)
                 {
                     result = Ok(Context.GetUserPermisoWithTransacciones(userId).TransaccionesSigned);
@@ -101,9 +105,9 @@ namespace BancDelTemps.ApiRest.Controllers
             {
                 result = BadRequest();
             }
-            else if (HttpContext.User.Identity.IsAuthenticated)
+            else if (ContextoHttp.IsAuthenticated)
             {
-                user = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(HttpContext));
+                user = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(ContextoHttp));
                 if (user.IsValidated)
                 {
                     operacion = await Context.Operaciones.FindAsync(transaccionDTO.IdOperacion);
@@ -206,9 +210,9 @@ namespace BancDelTemps.ApiRest.Controllers
             {
                 result = BadRequest();
             }
-            else if (HttpContext.User.Identity.IsAuthenticated)
+            else if (ContextoHttp.IsAuthenticated)
             {
-                user = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(HttpContext));
+                user = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(ContextoHttp));
                 operacion = await Context.Operaciones.FindAsync(transaccionDTO.IdOperacion);
                 if (Equals(operacion, default))
                 {
@@ -262,9 +266,9 @@ namespace BancDelTemps.ApiRest.Controllers
             {
                 result = BadRequest();
             }
-            else if (HttpContext.User.Identity.IsAuthenticated)
+            else if (ContextoHttp.IsAuthenticated)
             {
-                userFrom = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(HttpContext));
+                userFrom = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(ContextoHttp));
                 operacion = await Context.Operaciones.FindAsync(transaccionDelegadaDTO.IdOperacion);
                 if (Equals(operacion, default))
                 {
@@ -357,9 +361,9 @@ namespace BancDelTemps.ApiRest.Controllers
             Operacion operacion;
             TransaccionDelegada transaccionDelegada;
 
-            if (HttpContext.User.Identity.IsAuthenticated)
+            if (ContextoHttp.IsAuthenticated)
             {
-                user = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(HttpContext));
+                user = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(ContextoHttp));
                 transaccionDelegada = Context.TransaccionesDelegadas.Where(t => t.OperacionId.Equals(transaccionDelegadaDTO.IdOperacion)).FirstOrDefault();
 
                 if (Equals(transaccionDelegada, default))

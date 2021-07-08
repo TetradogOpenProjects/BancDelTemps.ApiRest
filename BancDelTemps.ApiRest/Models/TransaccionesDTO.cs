@@ -8,12 +8,12 @@ namespace BancDelTemps.ApiRest.Models
     {
        
         public TransaccionesDTO() { }
-        public TransaccionesDTO(User user)
+        public TransaccionesDTO(User user,Context context)
         {
             IdUser = user.Id;
             In = user.TransaccionesIn.Select(s=>new TransaccionDTO(s));
             Out = user.TransaccionesFrom.Select(s => new TransaccionDTO(s));
-            Signed = user.TransaccionesSigned.Select(s => new TransaccionDTO(s.Transaccion));
+            Signed = user.TransaccionesSigned.Select(s => new TransaccionDTO(context.GetTransaccion(s.Operacion)));
 
         }
         public long IdUser { get; set; }

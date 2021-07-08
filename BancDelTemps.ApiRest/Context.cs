@@ -70,9 +70,11 @@ namespace BancDelTemps.ApiRest
             modelBuilder.Entity<TransaccionDelegada>().HasOne(t => t.Operacion).WithMany();
             modelBuilder.Entity<TransaccionDelegada>().Navigation(u => u.Operacion).UsePropertyAccessMode(PropertyAccessMode.Property);
             modelBuilder.Entity<TransaccionDelegada>().Navigation(u => u.User).UsePropertyAccessMode(PropertyAccessMode.Property);
-            modelBuilder.Entity<TransaccionDelegada>().Navigation(u => u.Transaccion).UsePropertyAccessMode(PropertyAccessMode.Property);
             #endregion
-
+            #region Operacion
+            modelBuilder.Entity<Operacion>().Navigation(o => o.Revisor).UsePropertyAccessMode(PropertyAccessMode.Property);
+            modelBuilder.Entity<Operacion>().Navigation(o => o.User).UsePropertyAccessMode(PropertyAccessMode.Property);
+            #endregion
 
             //añado datos al principio
             //SeedDataBase(modelBuilder);
@@ -118,7 +120,7 @@ namespace BancDelTemps.ApiRest
 
         public Transaccion GetTransaccion(Operacion operacion)
         {
-            return Transacciones.Where(t => t.OperacionId.Equals(operacion.Id)).FirstOrDefault();
+            return Transacciones.Include(t=>t.Operacion).Where(t => t.OperacionId.Equals(operacion.Id)).FirstOrDefault();
         }
         public TransaccionDelegada GetTransaccionDelegada(Operacion operacion)
         {
@@ -139,7 +141,6 @@ namespace BancDelTemps.ApiRest
             return GetUsersPermisos().Include(u => u.TransaccionesIn)
                                      .Include(u => u.TransaccionesFrom)
                                      .Include(u => u.TransaccionesSigned)
-                                     .ThenInclude(t => t.Transaccion)
                                      .ThenInclude(t => t.Operacion)
                                      .Include(u => u.TransaccionesValidator);
 

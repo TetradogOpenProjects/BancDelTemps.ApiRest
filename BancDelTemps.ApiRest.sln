@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31321.278
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BancDelTemps.ApiRest", "BancDelTemps.ApiRest\BancDelTemps.ApiRest.csproj", "{C6AA547B-88EC-4612-BCFA-9CD0FB17AD18}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BancDelTemps.ApiRest", "BancDelTemps.ApiRest\BancDelTemps.ApiRest.csproj", "{C6AA547B-88EC-4612-BCFA-9CD0FB17AD18}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BancDelTemps.ApiRest.Testing", "BancDelTemps.ApiRest.Testing\BancDelTemps.ApiRest.Testing.csproj", "{11E6FA56-DF4F-4145-9B80-465B1B0372B6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{C6AA547B-88EC-4612-BCFA-9CD0FB17AD18}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C6AA547B-88EC-4612-BCFA-9CD0FB17AD18}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C6AA547B-88EC-4612-BCFA-9CD0FB17AD18}.Release|Any CPU.Build.0 = Release|Any CPU
+		{11E6FA56-DF4F-4145-9B80-465B1B0372B6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{11E6FA56-DF4F-4145-9B80-465B1B0372B6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{11E6FA56-DF4F-4145-9B80-465B1B0372B6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{11E6FA56-DF4F-4145-9B80-465B1B0372B6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
