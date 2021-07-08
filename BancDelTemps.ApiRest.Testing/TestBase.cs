@@ -100,7 +100,8 @@ namespace BancDelTemps.ApiRest.Testing
         }
         public User GetValidatedUser()
         {
-            User userValidated = Context.GetUsersPermisos().Where(u => u.ValidatorId.HasValue && u.Permisos.Where(p=> !p.RevokedById.HasValue || p.GrantedDate > p.RevokedDate.Value).Count() == 0).FirstOrDefault();
+            const string EMAIL = "Validated@email";
+            User userValidated = Context.GetUsersPermisos().Where(u => u.Email.Equals(EMAIL)).FirstOrDefault();
             User userValidator = Context.GetUsersPermisos().Where(u => u.ValidatorId.HasValue && u.Permisos.Any(p => (!p.RevokedById.HasValue || p.GrantedDate > p.RevokedDate.Value) && p.Permiso.Nombre.Equals(Permiso.MODVALIDATION))).FirstOrDefault();
             if (Equals(userValidated, default))
             {
@@ -112,7 +113,7 @@ namespace BancDelTemps.ApiRest.Testing
                 {
                     Name = "Validated",
                     Surname="apellido",
-                    Email = "Validated@emai",
+                    Email = EMAIL,
                     JoinDate = DateTime.UtcNow
                 };
                 Context.Users.Add(userValidated);
@@ -125,15 +126,16 @@ namespace BancDelTemps.ApiRest.Testing
         }
         public User GetUserWithPermiso(string permiso)
         {
-            User superUser = Context.GetUsersPermisos().Where(u => u.Permisos.Any(p=>(!p.RevokedById.HasValue || p.GrantedDate > p.RevokedDate.Value) && p.Permiso.Nombre.Equals(permiso))).FirstOrDefault();
+            string name = $"User{permiso.Replace(" ", "")}";
+            User superUser = Context.GetUsersPermisos().Where(u => u.Name.Equals(name)).FirstOrDefault();
             if (Equals(superUser, default))
             {
 
                 superUser = new User()
                 {
-                    Name = $"User{permiso}",
+                    Name = name,
                     Surname="sin apellido",
-                    Email = $"User{permiso.Replace(" ","")}@email",
+                    Email = $"{name}@email",
                     JoinDate = DateTime.UtcNow
                 };
                
