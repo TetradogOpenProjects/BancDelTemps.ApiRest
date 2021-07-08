@@ -68,8 +68,8 @@ namespace BancDelTemps.ApiRest.Testing
             Context = new Context(optionsBilder.Options);
             for (int i = 0; i < Permiso.Todos.Length; i++)
             {
-                if(!Context.Permisos.Any(p=>p.Nombre.Equals(Permiso.Todos[i])))
-                 Context.Permisos.Add(new Permiso() { Nombre = Permiso.Todos[i] });
+                if (!Context.Permisos.Any(p => p.Nombre.Equals(Permiso.Todos[i])))
+                    Context.Permisos.Add(new Permiso() { Nombre = Permiso.Todos[i] });
             }
             Context.SaveChanges();
             Configuration = new Configuration();
@@ -83,14 +83,15 @@ namespace BancDelTemps.ApiRest.Testing
 
         public User GetNoValidatedUser()
         {
-            User userNotValidated = Context.Users.Where(u => !u.ValidatorId.HasValue).FirstOrDefault();
+            const string EMAIL = "Invalidated@email";
+            User userNotValidated = Context.Users.Where(u => u.Email.Equals(EMAIL)).FirstOrDefault();
             if (Equals(userNotValidated, default))
             {
                 userNotValidated = new User()
                 {
                     Name = "Invalidated",
                     Surname = "apellido",
-                    Email = "Invalidated@email",
+                    Email = EMAIL,
                     JoinDate = DateTime.UtcNow
                 };
                 Context.Users.Add(userNotValidated);
@@ -101,18 +102,19 @@ namespace BancDelTemps.ApiRest.Testing
         public User GetValidatedUser()
         {
             const string EMAIL = "Validated@email";
+
+            User userValidator;
             User userValidated = Context.GetUsersPermisos().Where(u => u.Email.Equals(EMAIL)).FirstOrDefault();
-            User userValidator = Context.GetUsersPermisos().Where(u => u.ValidatorId.HasValue && u.Permisos.Any(p => (!p.RevokedById.HasValue || p.GrantedDate > p.RevokedDate.Value) && p.Permiso.Nombre.Equals(Permiso.MODVALIDATION))).FirstOrDefault();
+
             if (Equals(userValidated, default))
             {
-                if (Equals(userValidator, default))
-                {
-                    userValidator = GetUserWithPermiso(Permiso.MODVALIDATION);
-                }
+
+                userValidator = GetUserWithPermiso(Permiso.MODVALIDATION);
+
                 userValidated = new User()
                 {
                     Name = "Validated",
-                    Surname="apellido",
+                    Surname = "apellido",
                     Email = EMAIL,
                     JoinDate = DateTime.UtcNow
                 };
@@ -126,24 +128,24 @@ namespace BancDelTemps.ApiRest.Testing
         }
         public User GetUserWithPermiso(string permiso)
         {
-            string name = $"User{permiso.Replace(" ", "")}";
-            User superUser = Context.GetUsersPermisos().Where(u => u.Name.Equals(name)).FirstOrDefault();
+            string email = $"User{permiso.Replace(" ", "")}@email";
+            User superUser = Context.GetUsersPermisos().Where(u => u.Email.Equals(email)).FirstOrDefault();
             if (Equals(superUser, default))
             {
 
                 superUser = new User()
                 {
-                    Name = name,
-                    Surname="sin apellido",
-                    Email = $"{name}@email",
+                    Name = email.Split('@')[0],
+                    Surname = "apellido",
+                    Email = email,
                     JoinDate = DateTime.UtcNow
                 };
-               
+
                 Context.Users.Add(superUser);
                 Context.SaveChanges();
                 superUser.Validator = superUser;
                 Context.Users.Update(superUser);
-                Context.PermisosUsuarios.Add(new UserPermiso() { PermisoId = Context.Permisos.Where(p=>p.Nombre.Equals(permiso)).First().Id, GrantedById = superUser.Id, GrantedDate = DateTime.UtcNow, UserId = superUser.Id });
+                Context.PermisosUsuarios.Add(new UserPermiso() { PermisoId = Context.Permisos.Where(p => p.Nombre.Equals(permiso)).First().Id, GrantedById = superUser.Id, GrantedDate = DateTime.UtcNow, UserId = superUser.Id });
                 Context.SaveChanges();
             }
             return superUser;
@@ -152,10 +154,10 @@ namespace BancDelTemps.ApiRest.Testing
 
         public void DoAction(User user, TestUserMethod method)
         {
-         
+
             try
             {
-   
+
                 ContextoHttp.IsAuthenticated = !Equals(user, default);
                 if (ContextoHttp.IsAuthenticated)
                     ContextoHttp.Claims = new string[] { string.Empty, string.Empty, string.Empty, string.Empty, user.Email };
