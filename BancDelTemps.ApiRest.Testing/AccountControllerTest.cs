@@ -48,7 +48,7 @@ namespace BancDelTemps.ApiRest.Testing
         private void GetUserInfo(User user)
         {
            IActionResult result= Controller.GetUser();
-           Assert.IsType<OkResult>(result);
+           Assert.IsType<OkObjectResult>(result);
         }
         #endregion
     }

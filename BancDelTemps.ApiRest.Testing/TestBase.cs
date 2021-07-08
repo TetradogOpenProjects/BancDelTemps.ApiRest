@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
 using Xunit;
-using Microsoft.EntityFrameworkCore.InMemory;
 using System.Collections.Generic;
 using Microsoft.Extensions.Configuration;
 using System.Security.Claims;
@@ -61,14 +60,16 @@ namespace BancDelTemps.ApiRest.Testing
     public delegate void TestUserMethod(User user);
     public abstract class TestBase
     {
+        const string DEFAULT = "server=localhost;port=3322;user id=root;password=admin;database=BancDelTemps";
         public TestBase()
         {
             DbContextOptionsBuilder<Context> optionsBilder = new DbContextOptionsBuilder<Context>();
-            optionsBilder.UseInMemoryDatabase("bdTesting");
+            optionsBilder.UseMySql(DEFAULT, new MariaDbServerVersion(new Version(10, 5, 10)));
             Context = new Context(optionsBilder.Options);
             for (int i = 0; i < Permiso.Todos.Length; i++)
             {
-                Context.Permisos.Add(new Permiso() { Nombre = Permiso.Todos[i] });
+                if(!Context.Permisos.Any(p=>p.Nombre.Equals(Permiso.Todos[i])))
+                 Context.Permisos.Add(new Permiso() { Nombre = Permiso.Todos[i] });
             }
             Context.SaveChanges();
             Configuration = new Configuration();
@@ -82,12 +83,13 @@ namespace BancDelTemps.ApiRest.Testing
 
         public User GetNoValidatedUser()
         {
-            User userNotValidated = Context.Users.Where(u => !u.IsValidated).FirstOrDefault();
+            User userNotValidated = Context.Users.Where(u => !u.ValidatorId.HasValue).FirstOrDefault();
             if (Equals(userNotValidated, default))
             {
                 userNotValidated = new User()
                 {
                     Name = "Invalidated",
+                    Surname = "apellido",
                     Email = "Invalidated@email",
                     JoinDate = DateTime.UtcNow
                 };
@@ -98,8 +100,8 @@ namespace BancDelTemps.ApiRest.Testing
         }
         public User GetValidatedUser()
         {
-            User userValidated = Context.Users.Include(u => u.Permisos).Where(u => u.IsValidated && u.Permisos.Where(p=>p.IsActive).Count() == 0).FirstOrDefault();
-            User userValidator = Context.Users.Include(u => u.Permisos).ThenInclude(p => p.Permiso).Where(u => u.IsValidated && u.IsModValidation).FirstOrDefault();
+            User userValidated = Context.GetUsersPermisos().Where(u => u.ValidatorId.HasValue && u.Permisos.Where(p=> !p.RevokedById.HasValue || p.GrantedDate > p.RevokedDate.Value).Count() == 0).FirstOrDefault();
+            User userValidator = Context.GetUsersPermisos().Where(u => u.ValidatorId.HasValue && u.Permisos.Any(p => (!p.RevokedById.HasValue || p.GrantedDate > p.RevokedDate.Value) && p.Permiso.Nombre.Equals(Permiso.MODVALIDATION))).FirstOrDefault();
             if (Equals(userValidated, default))
             {
                 if (Equals(userValidator, default))
@@ -109,30 +111,37 @@ namespace BancDelTemps.ApiRest.Testing
                 userValidated = new User()
                 {
                     Name = "Validated",
-                    Email = "Validated@email",
-                    JoinDate = DateTime.UtcNow,
-                    Validator = userValidator
+                    Surname="apellido",
+                    Email = "Validated@emai",
+                    JoinDate = DateTime.UtcNow
                 };
                 Context.Users.Add(userValidated);
+                Context.SaveChanges();
+                userValidated.Validator = userValidator;
+                Context.Users.Update(userValidated);
                 Context.SaveChanges();
             }
             return userValidated;
         }
         public User GetUserWithPermiso(string permiso)
         {
-            User superUser = Context.Users.Include(u => u.Permisos).ThenInclude(p=>p.Permiso).Where(u => u.IsValidated && u.Permisos.Any(p=>p.IsActive && p.Permiso.Nombre.Equals(permiso))).FirstOrDefault();
+            User superUser = Context.GetUsersPermisos().Where(u => u.Permisos.Any(p=>(!p.RevokedById.HasValue || p.GrantedDate > p.RevokedDate.Value) && p.Permiso.Nombre.Equals(permiso))).FirstOrDefault();
             if (Equals(superUser, default))
             {
 
                 superUser = new User()
                 {
                     Name = $"User{permiso}",
-                    Email = $"User{permiso.Trim(' ')}@email",
+                    Surname="sin apellido",
+                    Email = $"User{permiso.Replace(" ","")}@email",
                     JoinDate = DateTime.UtcNow
                 };
-                superUser.Validator = superUser;
+               
                 Context.Users.Add(superUser);
-                Context.PermisosUsuarios.Add(new UserPermiso() { Permiso = Context.Permisos.Find(Permiso.MODVALIDATION), GrantedBy = superUser, GrantedDate = DateTime.UtcNow, User = superUser });
+                Context.SaveChanges();
+                superUser.Validator = superUser;
+                Context.Users.Update(superUser);
+                Context.PermisosUsuarios.Add(new UserPermiso() { PermisoId = Context.Permisos.Where(p=>p.Nombre.Equals(permiso)).First().Id, GrantedById = superUser.Id, GrantedDate = DateTime.UtcNow, UserId = superUser.Id });
                 Context.SaveChanges();
             }
             return superUser;
