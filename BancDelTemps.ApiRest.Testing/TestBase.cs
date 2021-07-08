@@ -155,17 +155,10 @@ namespace BancDelTemps.ApiRest.Testing
         public void DoAction(User user, TestUserMethod method)
         {
 
-            try
-            {
-
-                ContextoHttp.IsAuthenticated = !Equals(user, default);
-                if (ContextoHttp.IsAuthenticated)
-                    ContextoHttp.Claims = new string[] { string.Empty, string.Empty, string.Empty, string.Empty, user.Email };
-                method(user);
-            }
-            catch { throw; }
-
-
+            ContextoHttp.IsAuthenticated = !Equals(user, default);
+            if (ContextoHttp.IsAuthenticated)
+                ContextoHttp.Claims = new string[] { string.Empty, string.Empty, string.Empty, string.Empty, user.Email };
+            method(user);
 
         }
     }

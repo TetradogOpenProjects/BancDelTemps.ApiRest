@@ -11,7 +11,7 @@ using Xunit;
 
 namespace BancDelTemps.ApiRest.Testing
 {
-    public class AccountControllerTest:TestBase
+    public class AccountControllerTest : TestBase
     {
         public AccountControllerTest() : base()
         {
@@ -23,7 +23,7 @@ namespace BancDelTemps.ApiRest.Testing
         [Fact]
         public void GetUserInfoInvalidated()
         {
-            DoAction(GetNoValidatedUser(),GetUserInfo);
+            DoAction(GetNoValidatedUser(), GetUserInfo);
         }
         [Fact]
         public void GetUserInfoValidated()
@@ -45,10 +45,17 @@ namespace BancDelTemps.ApiRest.Testing
         {
             DoAction(GetUserWithPermiso(Permiso.CANLISTUSER), GetUserInfo);
         }
+        [Fact]
+        public void GetUserInfoAnonimo()
+        {
+            DoAction(default, GetUserInfo);
+        }
         private void GetUserInfo(User user)
         {
-           IActionResult result= Controller.GetUser();
-           Assert.IsType<OkObjectResult>(result);
+            IActionResult result = Controller.GetUser();
+            if (!Equals(user, default))
+                Assert.IsType<OkObjectResult>(result);
+            else Assert.IsType<ForbidResult>(result);
         }
         #endregion
     }
