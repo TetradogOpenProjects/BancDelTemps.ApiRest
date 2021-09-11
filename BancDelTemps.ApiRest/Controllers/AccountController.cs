@@ -106,9 +106,10 @@ namespace BancDelTemps.ApiRest.Controllers
         [HttpGet("Token")]
         public async Task<IActionResult> GetToken()
         {
+            AuthenticateResult googleResult;
             IActionResult result;
             User user;
-            AuthenticateResult googleResult;
+            
 
             googleResult = await HttpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 
@@ -195,19 +196,17 @@ namespace BancDelTemps.ApiRest.Controllers
                                             Context.PermisosUsuarios.Add(new UserPermiso(userGranter, userToAdd, permiso));
                                         }
                                         Context.SaveChanges();
-
+                                        permisosOk.Add(permisoUserDTO.Permisos[i]);
                                     }
                                     catch { }
-                                    permisosOk.Add(permisoUserDTO.Permisos[i]);
+                                    
                                 }
 
                             }
                             result = Ok(permisosOk);
                         }
-                        else
-                        {
-                            result = Forbid();//el usuario aun no se ha validado!
-                        }
+                        else result = Forbid();//el usuario aun no se ha validado!
+                        
                     }
                     else result = NotFound();
 
@@ -215,6 +214,7 @@ namespace BancDelTemps.ApiRest.Controllers
                 else result = Unauthorized();
             }
             else result = Forbid();
+
             return result;
         }
 
@@ -257,13 +257,16 @@ namespace BancDelTemps.ApiRest.Controllers
                                     {
                                         try
                                         {
-                                            userPermiso.RevokedBy = userRevoker;
-                                            userPermiso.RevokedDate = DateTime.UtcNow;
-                                            Context.PermisosUsuarios.Update(userPermiso);
-                                            Context.SaveChanges();
+                                            if(userPermiso.IsActive){
+                                                userPermiso.RevokedBy = userRevoker;
+                                                userPermiso.RevokedDate = DateTime.UtcNow;
+                                                Context.PermisosUsuarios.Update(userPermiso);
+                                                Context.SaveChanges();
+                                            }
+                                            permisosOk.Add(permisoUserDTO.Permisos[i]);
                                         }
                                         catch { }
-                                        permisosOk.Add(permisoUserDTO.Permisos[i]);
+                                        
 
                                     }
 

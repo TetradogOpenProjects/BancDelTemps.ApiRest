@@ -16,6 +16,7 @@ namespace BancDelTemps.ApiRest.Controllers
     {
         delegate StatusCodeResult ModifyTransaccionDelegate(Transaccion transaccion, TransaccionDTO transaccionDTO);
         delegate StatusCodeResult ModifyTransaccionDelegadaDelegate(TransaccionDelegada transaccion, TransaccionDelegadaDTO transaccionDTO);
+        
         Context Context { get; set; }
         public IHttpContext ContextoHttp { get; set; }
         public TransaccionesController(Context context) {
@@ -150,10 +151,8 @@ namespace BancDelTemps.ApiRest.Controllers
 
                     }
                 }
-                else
-                {
-                    result = Forbid();//no se puede trabajar con alguien no validado!
-                }
+                else result = Forbid();//no se puede trabajar con alguien no validado!
+                
             }
             else result = Forbid();
             return result;
@@ -172,7 +171,7 @@ namespace BancDelTemps.ApiRest.Controllers
                 }
                 else if (!user.IsValidated)
                 {
-                    result = StatusCode((int)HttpStatusCode.Forbidden);
+                    result = Forbid();
                 }
                 else
                 {
@@ -299,7 +298,7 @@ namespace BancDelTemps.ApiRest.Controllers
                             else
                             {
                                 //la operacion ya se ha delegado
-                                result = BadRequest();
+                                result = Forbid();
                             }
                         }
                         else result = Forbid();
