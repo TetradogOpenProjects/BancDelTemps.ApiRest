@@ -191,9 +191,10 @@ namespace BancDelTemps.ApiRest.Controllers
         public async Task<IActionResult> DeleteTransaccion(TransaccionDTO transaccionDTO)
         {
             return await ModifyTransaccion(transaccionDTO, (transaccion, tDTO) =>
-            {
-                Context.Transacciones.Remove(transaccion);
-                return Ok();
+            {   
+                    Context.Transacciones.Remove(transaccion);
+                    return Ok();
+
             });
 
         }
@@ -229,9 +230,14 @@ namespace BancDelTemps.ApiRest.Controllers
                         transaccionDelegada = Context.GetTransaccionDelegada(operacion);
                         if (user.Id == transaccion.UserFromId || (!Equals(transaccionDelegada, default) && transaccionDelegada.IsActiva && transaccionDelegada.User.Id == user.Id) || user.IsModTransaccion)
                         {
-                            result = metodoModifyTransaccion(transaccion, transaccionDTO);
-                            if (result is OkResult)
-                                await Context.SaveChangesAsync();
+                            if(transaccion.CanBack || user.IsModTransaccion){
+                                result = metodoModifyTransaccion(transaccion, transaccionDTO);
+                                if (result is OkResult){
+                                    await Context.SaveChangesAsync();
+                                }
+                            }
+                            else result=Unauthorized();
+                            
 
                         }
                         else

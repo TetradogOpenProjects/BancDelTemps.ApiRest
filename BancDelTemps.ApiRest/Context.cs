@@ -21,6 +21,8 @@ namespace BancDelTemps.ApiRest
         public DbSet<Transaccion> Transacciones { get; set; }
         public DbSet<TransaccionDelegada> TransaccionesDelegadas { get; set; }
         public DbSet<Operacion> Operaciones { get; set; }
+        public DbSet<Gift> Gifts { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -76,6 +78,11 @@ namespace BancDelTemps.ApiRest
             modelBuilder.Entity<Operacion>().Navigation(o => o.User).UsePropertyAccessMode(PropertyAccessMode.Property);
             #endregion
 
+            #region Gifts
+
+            modelBuilder.Entity<Gift>().Navigation(g=>g.Transaccion).UsePropertyAccessMode(PropertyAccessMode.Property);
+
+            #endregion
             //añado datos al principio
             //SeedDataBase(modelBuilder);
 
@@ -108,6 +115,11 @@ namespace BancDelTemps.ApiRest
 
 
         }
+        public IEnumerable<Gift> GetUserGifts([NotNull]User user){
+            return Gifts.Include(g=>g.Transaccion)
+                        .Where(g=>g.Transaccion.UserFromId==user.Id ||g.Transaccion.UserToId==user.Id);
+        }
+
         public User GetUserPermisoWithTransacciones([NotNull] User user)
         {
             return GetUserPermisoWithTransacciones(user.Email);
