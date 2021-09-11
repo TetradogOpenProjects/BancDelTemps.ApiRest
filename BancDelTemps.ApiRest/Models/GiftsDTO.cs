@@ -27,9 +27,9 @@ namespace BancDelTemps.ApiRest.Models
     public class GiftDTO{
         public GiftDTO(Gift gift){
             GiftId=gift.Id;
-            Transaccion=new TransaccionDTO(gift.Transaccion);
+            TransaccionId=gift.TransaccionId;
         }
         public long GiftId{get;set;}
-        public TransaccionDTO Transaccion{get;set;}
+        public long TransaccionId {get;set;}
     }
 }
