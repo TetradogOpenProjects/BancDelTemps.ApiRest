@@ -88,7 +88,10 @@ namespace BancDelTemps.ApiRest.Models
 
         [NotMapped]
         public int TotalMinutos =>INITTIME + TransaccionesIn.Sum(t => t.Minutos) - TransaccionesFrom.Sum(t => t.Minutos);
-
+        [NotMapped]
+        public int TotalMinutosInPorValidar=TransaccionesIn.Where(t=>t.Operacion.IsOK).Sum(t => t.Minutos);
+        [NotMapped]
+        public int TotalMinutosFromPorValidar=TransaccionesFrom.Where(t=>t.Operacion.IsOK).Sum(t => t.Minutos);
 
 
         public override string ToString()
@@ -137,6 +140,8 @@ namespace BancDelTemps.ApiRest.Models
             JoinDate = user.JoinDate;
             Permisos = user.PermisosActivosName;
             TotalMinutos = user.TotalMinutos;
+            TotalMinutosFromPorValidar=user.TotalMinutosFromPorValidar;
+            TotalMinutosInPorValidar=user.TotalMinutosInPorValidar;
         }
         public long Id { get; set; }
         public string Name { get; set; }
@@ -147,6 +152,8 @@ namespace BancDelTemps.ApiRest.Models
         public DateTime JoinDate { get; set; }
         public IEnumerable<string> Permisos { get; set; }
         public int TotalMinutos { get; set; }
+        public int TotalMinutosInPorValidar{get;set;}
+        public int TotalMinutosFromPorValidar{get;set;}
     }
 
     public class UserBasicDTO

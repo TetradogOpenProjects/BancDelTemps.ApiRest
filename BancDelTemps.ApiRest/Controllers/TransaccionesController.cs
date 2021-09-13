@@ -1,6 +1,7 @@
 ﻿using BancDelTemps.ApiRest.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,32 +15,139 @@ namespace BancDelTemps.ApiRest.Controllers
     [Authorize]
     public class TransaccionesController : Controller
     {
-        delegate StatusCodeResult ModifyTransaccionDelegate(Transaccion transaccion, TransaccionDTO transaccionDTO);
-        delegate StatusCodeResult ModifyTransaccionDelegadaDelegate(TransaccionDelegada transaccion, TransaccionDelegadaDTO transaccionDTO);
-        
+        delegate IActionResult ModifyTransaccionDelegate(Transaccion transaccion, TransaccionDTO transaccionDTO);
+        delegate IActionResult ModifyTransaccionDelegadaDelegate(TransaccionDelegada transaccion, TransaccionDelegadaDTO transaccionDTO);
+
         Context Context { get; set; }
         public IHttpContext ContextoHttp { get; set; }
-        public TransaccionesController(Context context) {
-            Context = context; 
-            ContextoHttp = new ContextoHttp(HttpContext); 
+        public TransaccionesController(Context context)
+        {
+            Context = context;
+            ContextoHttp = new ContextoHttp(HttpContext);
         }
 
-        [HttpGet("All")]
-        public IActionResult GetAll()
+        [HttpGet("{idTransaccion:long}")]
+        public IActionResult Get(long idTransaccion)
+        {
+
+            IActionResult result;
+            User user;
+            Transaccion transaccion;
+            if (ContextoHttp.IsAuthenticated)
+            {
+                user = Context.GetUserPermisoWithTransacciones(Models.User.GetEmailFromHttpContext(ContextoHttp));
+                transaccion = user.TransaccionesIn.Where(t => t.Id == idTransaccion).FirstOrDefault();
+                if (Equals(transaccion, default))
+                {
+                    transaccion = user.TransaccionesFrom.Where(t => t.Id == idTransaccion).FirstOrDefault();
+                }
+                if (Equals(transaccion, default))
+                {
+                    result = NotFound();
+                }
+                else
+                {
+                    result = Ok(new TransaccionDTO(transaccion));
+                }
+            }
+            else result = Forbid();
+
+            return result;
+        }
+        [HttpGet("Delegar/{idTransaccionDelegada:long}")]
+        public IActionResult GetDelegada(long idTransaccionDelegada)
+        {
+            //falta probar
+            IActionResult result;
+            User user;
+            TransaccionDelegada transaccionDelegada;
+            if (ContextoHttp.IsAuthenticated)
+            {
+                user = Context.GetUserPermisoWithTransacciones(Models.User.GetEmailFromHttpContext(ContextoHttp));
+                transaccionDelegada = user.TransaccionesSigned.Where(t => t.Id == idTransaccionDelegada).FirstOrDefault();
+                if (Equals(transaccionDelegada, default))
+                {
+                    result = NotFound();
+                }
+                else
+                {
+                    result = Ok(new TransaccionDelegadaDTO(transaccionDelegada));
+                }
+            }
+            else result = Forbid();
+
+            return result;
+        }
+        [HttpGet("Validar/All/{ticksLastUpdate:long}")]
+        public IActionResult GetToValidateAll(long ticksLastUpdate)
+        {
+            IActionResult result;
+            User validador;
+            if (ContextoHttp.IsAuthenticated)
+            {
+                validador = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(ContextoHttp));
+                if (validador.IsModTransaccion)
+                {
+                    result = Ok(Context.Transacciones
+                                       .Include(t => t.Operacion)
+                                       .Where(t => !t.Operacion.IsRevisada && t.Fecha.Ticks > ticksLastUpdate)
+                                       .Select(t => new TransaccionDTO(t))
+                            );
+                }
+                else result = Unauthorized();
+            }
+            else result = Forbid();
+            return result;
+
+        }
+        [HttpPost("Validar/{idOpracion:long}/{isValid:bool}")]
+        public async Task<IActionResult> Validate(long idOpracion, bool isValid)
+        {
+            ActionResult result;
+            User validador;
+            Operacion operacion;
+            if (ContextoHttp.IsAuthenticated)
+            {
+                validador = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(ContextoHttp));
+                if (validador.IsModTransaccion)
+                {
+                    operacion = await Context.Operaciones.FindAsync(idOpracion);
+                    if (Equals(operacion, default))
+                    {
+                        result = NotFound();
+                    }
+                    else
+                    {
+                        if (!operacion.IsRevisada)
+                        {
+                            operacion.Revisor = validador;
+                            operacion.IsValid = isValid;
+                            await Context.SaveChangesAsync();
+                        }
+                        result = Ok(operacion);
+                    }
+                }
+                else result = Unauthorized();
+            }
+            else result = Forbid();
+            return result;
+        }
+        [HttpGet("All/{ticksLastUpdate:long}")]
+        public IActionResult GetAll(long ticksLastUpdate)
         {
             IActionResult result;
             User user;
             if (ContextoHttp.IsAuthenticated)
             {
                 user = Context.GetUserPermisoWithTransacciones(Models.User.GetEmailFromHttpContext(ContextoHttp));
-                result = Ok(new TransaccionesDTO(user,Context));
+                result = Ok(new TransaccionesDTO(user, Context, ticksLastUpdate));
             }
             else result = Forbid();
             return result;
         }
 
-        [HttpGet("Delegadas")]
-        public IActionResult GetAllDelegadas()
+        [HttpGet("Delegadas/{ticksLastUpdate:long}")]
+        public IActionResult GetAllDelegadas(long ticksLastUpdate)
         {
             IActionResult result;
             User user;
@@ -55,8 +163,8 @@ namespace BancDelTemps.ApiRest.Controllers
             return result;
         }
 
-        [HttpGet("{userId:long}")]
-        public IActionResult GetAllUser(long userId)
+        [HttpGet("User/{userId:long}/{ticksLastUpdate:long}")]
+        public IActionResult GetAllUser(long userId, long ticksLastUpdate)
         {
             IActionResult result;
             User admin;
@@ -65,7 +173,7 @@ namespace BancDelTemps.ApiRest.Controllers
                 admin = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(ContextoHttp));
                 if (admin.IsAdmin)
                 {
-                    result = Ok(new TransaccionesDTO(Context.GetUserPermisoWithTransacciones(userId),Context));
+                    result = Ok(new TransaccionesDTO(Context.GetUserPermisoWithTransacciones(userId), Context, ticksLastUpdate));
                 }
                 else result = Unauthorized();
             }
@@ -73,8 +181,8 @@ namespace BancDelTemps.ApiRest.Controllers
             return result;
         }
 
-        [HttpGet("Delegadas/{userId:long}")]
-        public IActionResult GetAllDelegadas(long userId)
+        [HttpGet("User/Delegadas/{userId:long}")]
+        public IActionResult GetAllDelegadasUser(long userId)
         {
             IActionResult result;
             User admin;
@@ -152,7 +260,7 @@ namespace BancDelTemps.ApiRest.Controllers
                     }
                 }
                 else result = Forbid();//no se puede trabajar con alguien no validado!
-                
+
             }
             else result = Forbid();
             return result;
@@ -163,7 +271,7 @@ namespace BancDelTemps.ApiRest.Controllers
         {
             return await ModifyTransaccion(transaccionDTO, (transaccion, tDTO) =>
             {
-                StatusCodeResult result;
+                IActionResult result;
                 User user = Context.Users.Find(tDTO.IdTo);
                 if (Equals(user, default))
                 {
@@ -191,9 +299,9 @@ namespace BancDelTemps.ApiRest.Controllers
         public async Task<IActionResult> DeleteTransaccion(TransaccionDTO transaccionDTO)
         {
             return await ModifyTransaccion(transaccionDTO, (transaccion, tDTO) =>
-            {   
-                    Context.Transacciones.Remove(transaccion);
-                    return Ok();
+            {
+                Context.Transacciones.Remove(transaccion);
+                return Ok();
 
             });
 
@@ -230,14 +338,16 @@ namespace BancDelTemps.ApiRest.Controllers
                         transaccionDelegada = Context.GetTransaccionDelegada(operacion);
                         if (user.Id == transaccion.UserFromId || (!Equals(transaccionDelegada, default) && transaccionDelegada.IsActiva && transaccionDelegada.User.Id == user.Id) || user.IsModTransaccion)
                         {
-                            if(transaccion.CanBack || user.IsModTransaccion){
+                            if (transaccion.CanBack || user.IsModTransaccion)
+                            {
                                 result = metodoModifyTransaccion(transaccion, transaccionDTO);
-                                if (result is OkResult){
+                                if (result is OkResult)
+                                {
                                     await Context.SaveChangesAsync();
                                 }
                             }
-                            else result=Unauthorized();
-                            
+                            else result = Unauthorized();
+
 
                         }
                         else
@@ -327,7 +437,7 @@ namespace BancDelTemps.ApiRest.Controllers
         {
             return await ModifyTransaccionDelegada(transaccionDelegadaDTO, (transaccionDelegada, tDTO) =>
             {
-                StatusCodeResult result;
+                IActionResult result;
                 User userDelegado = Context.Users.Find(tDTO.IdUsuarioADelegar);
                 if (Equals(userDelegado, default))
                 {
@@ -335,7 +445,7 @@ namespace BancDelTemps.ApiRest.Controllers
                 }
                 else if (!userDelegado.IsValidated)
                 {
-                    result = StatusCode((int)HttpStatusCode.Forbidden);
+                    result = Forbid();
                 }
                 else
                 {
@@ -397,5 +507,8 @@ namespace BancDelTemps.ApiRest.Controllers
             else result = Forbid();
             return result;
         }
+
+
+
     }
 }
