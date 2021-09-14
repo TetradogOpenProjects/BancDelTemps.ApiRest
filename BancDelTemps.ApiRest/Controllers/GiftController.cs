@@ -1,6 +1,7 @@
 using BancDelTemps.ApiRest.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,11 +32,43 @@ namespace BancDelTemps.ApiRest.Controllers
             if (ContextoHttp.IsAuthenticated)
             {
                 user = await Context.Users.FindAsync(Models.User.GetEmailFromHttpContext(ContextoHttp));
-                result = Ok(new GiftsDTO(user,Context));
+                if (Equals(user, default))
+                {
+                    result = NotFound();//No se si es posible que se de pero lo pondré por si acaso de momento.
+                }
+                else
+                {
+                    result = Ok(new GiftsDTO(user, Context));
+                }
+                
             }
             else result = Forbid();
             return result;
 
+        }
+        [HttpGet("User/{userId:long}")]
+        public async Task<IActionResult> GetAllUser(long userId)
+        {
+            IActionResult result;
+            User validador;
+            if (ContextoHttp.IsAuthenticated)
+            {
+                validador = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(ContextoHttp));
+                if (validador.IsModGift)
+                {
+                    if (Equals(await Context.Users.FindAsync(userId), default))
+                    {
+                        result = NotFound();
+                    }
+                    else
+                    {
+                        result = Ok(new GiftsDTO(userId, Context));
+                    }
+                }
+                else result = Unauthorized();
+            }
+            else result = Forbid();
+            return result;
         }
     }
 }

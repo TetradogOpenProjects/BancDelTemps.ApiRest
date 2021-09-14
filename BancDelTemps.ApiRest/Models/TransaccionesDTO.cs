@@ -6,19 +6,21 @@ namespace BancDelTemps.ApiRest.Models
 {
     public class TransaccionesDTO
     {
-       
+
         public TransaccionesDTO() { }
-        public TransaccionesDTO(User user,Context context,long ticksLastUpdate)
+        public TransaccionesDTO(User user, Context context, long ticksLastUpdate)
         {
             IdUser = user.Id;
-            In = user.TransaccionesIn.Where(t=>t.Fecha.Ticks>ticksLastUpdate)
-                                     .Select(s=>new TransaccionDTO(s));
+            In = user.TransaccionesIn.Where(t => t.Fecha.Ticks > ticksLastUpdate)
+                                     .Select(s => new TransaccionDTO(s));
 
-            Out = user.TransaccionesFrom.Where(t=>t.Fecha.Ticks>ticksLastUpdate)
+            Out = user.TransaccionesFrom.Where(t => t.Fecha.Ticks > ticksLastUpdate)
                                         .Select(s => new TransaccionDTO(s));
-                                        
-            Signed = user.TransaccionesSigned.Select(s => new TransaccionDTO(context.GetTransaccion(s.Operacion)))
-                                             .Where(t=>t.Fecha.Ticks>ticksLastUpdate);
+
+            Signed = user.TransaccionesSigned.Select(s => context.GetTransaccion(s.Operacion))
+                                             .Where(t => t.Fecha.Ticks > ticksLastUpdate)
+                                             .Select(t => new TransaccionDTO(t));
+
 
         }
         public long IdUser { get; set; }
@@ -49,7 +51,16 @@ namespace BancDelTemps.ApiRest.Models
 
         public Transaccion ToTransaccion()
         {
-            return new Transaccion() { UserFromId = IdFrom, UserToId = IdTo, Fecha = Fecha, Minutos =Minutos,UserValidatorId=IdValidator,OperacionId=IdOperacion };
+            return new Transaccion() {
+
+                                       UserFromId = IdFrom,
+                                       UserToId = IdTo, 
+                                       Fecha = Fecha,
+                                       Minutos = Minutos,
+                                       UserValidatorId = IdValidator,
+                                       OperacionId = IdOperacion
+
+            };
         }
     }
 

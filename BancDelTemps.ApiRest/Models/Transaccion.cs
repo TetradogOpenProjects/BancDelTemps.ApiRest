@@ -8,7 +8,7 @@ namespace BancDelTemps.ApiRest.Models
 {
     public class Transaccion
     {
-        public static TimeSpan MaxBackTime{get;set;}=TimeSpan.FromDays(15);//poner el numero de dias que sea adecuado
+        public static TimeSpan MaxBackTime { get; set; } = TimeSpan.FromDays(15);//poner el numero de dias que sea adecuado
 
         public long Id { get; set; }
         public long OperacionId { get; set; }
@@ -24,6 +24,6 @@ namespace BancDelTemps.ApiRest.Models
         [NotMapped]
         public bool IsValidated => UserValidatorId.HasValue;
         [NotMapped]
-        public bool CanBack=> (DateTime.Now.Utc - Fecha ) < MaxBackTime; 
+        public bool CanBack => (DateTime.UtcNow - Fecha) < MaxBackTime;
     }
 }

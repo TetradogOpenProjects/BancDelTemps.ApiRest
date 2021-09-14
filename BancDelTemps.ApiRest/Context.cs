@@ -116,10 +116,13 @@ namespace BancDelTemps.ApiRest
 
         }
         public IEnumerable<Gift> GetUserGifts([NotNull]User user){
-            return Gifts.Include(g=>g.Transaccion)
-                        .Where(g=>g.Transaccion.UserFromId==user.Id ||g.Transaccion.UserToId==user.Id);
+            return GetUserGifts(user.Id);
         }
-
+        public IEnumerable<Gift> GetUserGifts(long userId)
+        {
+            return Gifts.Include(g => g.Transaccion)
+                        .Where(g => g.Transaccion.UserFromId == userId || g.Transaccion.UserToId == userId);
+        }
         public User GetUserPermisoWithTransacciones([NotNull] User user)
         {
             return GetUserPermisoWithTransacciones(user.Email);

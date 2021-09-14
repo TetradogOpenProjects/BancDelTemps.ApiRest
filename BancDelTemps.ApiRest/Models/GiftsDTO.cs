@@ -8,15 +8,17 @@ namespace BancDelTemps.ApiRest.Models
     {
        
         public GiftsDTO() { }
-        public GiftsDTO(User user,Context context)
+        public GiftsDTO(User user, Context context) : this(user.Id, context) { }
+       
+        public GiftsDTO(long userId,Context context)
         {
-            IdUser = user.Id;
-            Recived = context.GetUserGifts(user)
-                        .Where(g=>g.Transaccion.UserToId==user.Id)
+            UserId = userId;
+            Recived = context.GetUserGifts(userId)
+                        .Where(g=>g.Transaccion.UserToId== userId)
                         .Select(g=>new GiftDTO(g));
 
-            Gifted = context.GetUserGifts(user)
-                         .Where(g=>g.Transaccion.UserFromId==user.Id)
+            Gifted = context.GetUserGifts(userId)
+                         .Where(g=>g.Transaccion.UserFromId== userId)
                          .Select(g=>new GiftDTO(g));
         }
         public long UserId { get; set; }
@@ -25,6 +27,8 @@ namespace BancDelTemps.ApiRest.Models
 
     }
     public class GiftDTO{
+
+        public GiftDTO() { }
         public GiftDTO(Gift gift){
             GiftId=gift.Id;
             TransaccionId=gift.TransaccionId;

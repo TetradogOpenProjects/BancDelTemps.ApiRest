@@ -77,6 +77,8 @@ namespace BancDelTemps.ApiRest.Models
         public bool IsModValidation => IsAdmin || PermisosActivosName.Any(p => Permiso.MODVALIDATION.Equals(p));
         [NotMapped]
         public bool CanListUser=> IsAdmin || PermisosActivosName.Any(p => Permiso.CANLISTUSER.Equals(p));
+        [NotMapped]
+        public bool IsModGift => IsAdmin || PermisosActivosName.Any(p => Permiso.MODGIFT.Equals(p));
 
         public ICollection<Transaccion> TransaccionesFrom { get; set; }
         public ICollection<Transaccion> TransaccionesIn { get; set; }
@@ -89,16 +91,16 @@ namespace BancDelTemps.ApiRest.Models
         [NotMapped]
         public int TotalMinutos =>INITTIME + TransaccionesIn.Sum(t => t.Minutos) - TransaccionesFrom.Sum(t => t.Minutos);
         [NotMapped]
-        public int TotalMinutosInPorValidar=TransaccionesIn.Where(t=>t.Operacion.IsOK).Sum(t => t.Minutos);
+        public int TotalMinutosInPorValidar=>TransaccionesIn.Where(t=>t.Operacion.IsOk).Sum(t => t.Minutos);
         [NotMapped]
-        public int TotalMinutosFromPorValidar=TransaccionesFrom.Where(t=>t.Operacion.IsOK).Sum(t => t.Minutos);
+        public int TotalMinutosFromPorValidar=>TransaccionesFrom.Where(t=>t.Operacion.IsOk).Sum(t => t.Minutos);
 
 
         public override string ToString()
         {
             return Email;
         }
-        public JwtSecurityToken GetToken(IConfiguration configuration, TimeSpan expiraToken = default(TimeSpan))
+        public JwtSecurityToken GetToken([NotNull]IConfiguration configuration, TimeSpan expiraToken = default(TimeSpan))
         {
             SymmetricSecurityKey key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]));
             SigningCredentials signIn = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -126,7 +128,7 @@ namespace BancDelTemps.ApiRest.Models
         }
 
     }
-    public class UserDTO
+    public class UserDTO//no hay herencia con el Basic porque luego da problemas NetCore
     {
         public UserDTO() { }
         public UserDTO([NotNull]User user)
@@ -159,13 +161,14 @@ namespace BancDelTemps.ApiRest.Models
     public class UserBasicDTO
     {
         public UserBasicDTO() { }
-        public UserBasicDTO(User user)
+        public UserBasicDTO([NotNull]User user)
         {
             Id = user.Id;
             Name = user.Name;
             Surname = user.Surname;
             IsOnHoliDays = user.IsOnHolidays;
             JoinDate = user.JoinDate;
+            IsValidated = user.IsValidated;
         }
 
         public long Id { get; set; }
@@ -173,6 +176,8 @@ namespace BancDelTemps.ApiRest.Models
         public string Surname { get; set; }
         public bool IsOnHoliDays { get; set; }
         public DateTime JoinDate { get; set; }
+        public bool IsValidated { get; set; }
         //poner url picture
+
     }
 }

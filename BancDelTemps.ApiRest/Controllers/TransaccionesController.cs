@@ -146,8 +146,8 @@ namespace BancDelTemps.ApiRest.Controllers
             return result;
         }
 
-        [HttpGet("Delegadas/{ticksLastUpdate:long}")]
-        public IActionResult GetAllDelegadas(long ticksLastUpdate)
+        [HttpGet("Delegadas")]
+        public IActionResult GetAllDelegadas()
         {
             IActionResult result;
             User user;
