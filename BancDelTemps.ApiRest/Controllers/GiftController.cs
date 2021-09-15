@@ -16,31 +16,24 @@ namespace BancDelTemps.ApiRest.Controllers
     public class GiftController : Controller
     {
         Context Context { get; set; }
-        IConfiguration Configuration { get; set; }
+        TransaccionesController TransaccionesController { get; set; }
         public IHttpContext ContextoHttp { get; set; }
-        public GiftController(Context context, IConfiguration configuration)
+        public GiftController(Context context)
         {
             Context = context;
-            Configuration = configuration;
             ContextoHttp = new ContextoHttp(HttpContext);
+            TransaccionesController = new TransaccionesController(Context);
         }
 
         [HttpGet("")]
-        public async Task<IActionResult> GetAll(){
+        public async Task<IActionResult> GetAll()
+        {
             IActionResult result;
             User user;
             if (ContextoHttp.IsAuthenticated)
             {
                 user = await Context.Users.FindAsync(Models.User.GetEmailFromHttpContext(ContextoHttp));
-                if (Equals(user, default))
-                {
-                    result = NotFound();//No se si es posible que se de pero lo pondré por si acaso de momento.
-                }
-                else
-                {
-                    result = Ok(new GiftsDTO(user, Context));
-                }
-                
+                result = Ok(new GiftsDTO(user, Context));
             }
             else result = Forbid();
             return result;
@@ -68,6 +61,47 @@ namespace BancDelTemps.ApiRest.Controllers
                 else result = Unauthorized();
             }
             else result = Forbid();
+            return result;
+        }
+        [HttpPost("")]
+        public async Task<IActionResult> SetGift(TransaccionDTO transaccionDTO)
+        {
+            User user;
+            Transaccion transaccion;
+            Gift gift;
+            IActionResult result;
+
+
+            if (ContextoHttp.IsAuthenticated)
+            {
+                if (Equals(transaccionDTO, default))
+                {
+                    result = BadRequest();
+                }
+                else
+                {
+                    user = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(ContextoHttp));
+                    if (user.Id == transaccionDTO.IdFrom || user.IsModGift)
+                    {
+   
+                        transaccion = await TransaccionesController.DoTransaccion(transaccionDTO);
+                        if (!Equals(transaccion, default))
+                        {
+                            gift = new Gift()
+                            {
+                                TransaccionId = transaccion.Id
+                            };
+                            Context.Gifts.Add(gift);
+                            result = Ok(gift);
+                        }
+                        else result = BadRequest();
+
+                    }
+                    else result = Unauthorized();
+                }
+            }
+            else result = Forbid();
+
             return result;
         }
     }

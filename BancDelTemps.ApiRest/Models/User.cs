@@ -79,7 +79,8 @@ namespace BancDelTemps.ApiRest.Models
         public bool CanListUser=> IsAdmin || PermisosActivosName.Any(p => Permiso.CANLISTUSER.Equals(p));
         [NotMapped]
         public bool IsModGift => IsAdmin || PermisosActivosName.Any(p => Permiso.MODGIFT.Equals(p));
-
+        [NotMapped]
+        public bool IsModOperacion => IsAdmin || PermisosActivosName.Any(p => Permiso.MODOPERACION.Equals(p));
         public ICollection<Transaccion> TransaccionesFrom { get; set; }
         public ICollection<Transaccion> TransaccionesIn { get; set; }
         public ICollection<TransaccionDelegada> TransaccionesSigned { get; set; }

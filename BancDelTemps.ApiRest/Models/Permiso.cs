@@ -13,7 +13,8 @@ namespace BancDelTemps.ApiRest.Models
         public const string MODVALIDATION = "mod validation";
         public const string CANLISTUSER = "can list users";
         public const string MODGIFT = "mod gift";
-        public static string[] Todos =>new string[]{ADMIN,MODTRANSACCION,MODVALIDATION,CANLISTUSER,MODGIFT};
+        public const string MODOPERACION = "mod operacion";
+        public static string[] Todos =>new string[]{ADMIN,MODTRANSACCION,MODVALIDATION,CANLISTUSER,MODGIFT,MODOPERACION};
 
         public int Id { get; set; }
         public string Nombre { get; set; }
