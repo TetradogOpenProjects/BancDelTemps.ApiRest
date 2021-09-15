@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
@@ -15,7 +16,7 @@ namespace BancDelTemps.ApiRest.Controllers
     [Authorize]
     public class TransaccionesController : Controller
     {
-        delegate IActionResult ModifyTransaccionDelegate(Transaccion transaccion, TransaccionDTO transaccionDTO);
+        delegate Task<IActionResult> ModifyTransaccionDelegate(Transaccion transaccion, TransaccionDTO transaccionDTO);
         delegate IActionResult ModifyTransaccionDelegadaDelegate(TransaccionDelegada transaccion, TransaccionDelegadaDTO transaccionDTO);
 
         Context Context { get; set; }
@@ -187,12 +188,12 @@ namespace BancDelTemps.ApiRest.Controllers
                             }
                             else
                             {//si hay más participantes a dar el pago y se quiere añadir a posteriori
-                                result = await DoTransaccion(user, transaccionDTO, operacion);
+                                result = await DoTransaccion(transaccionDTO, user, operacion);
                             }
                         }
                         else
                         {
-                            result = await DoTransaccion(user, transaccionDTO, operacion);
+                            result = await DoTransaccion(transaccionDTO, user, operacion);
 
                         }
                     }
@@ -203,12 +204,28 @@ namespace BancDelTemps.ApiRest.Controllers
             else result = Forbid();
             return result;
         }
-        async Task<IActionResult> DoTransaccion(User user, TransaccionDTO transaccionDTO, Operacion operacion)
+        async Task<IActionResult> DoTransaccion([NotNull]TransaccionDTO transaccionDTO, User user=default, Operacion operacion=default)
         {
             IActionResult result;
 
             TransaccionDelegada transaccionDelegada;
-            bool autoritzed = user.Id == transaccionDTO.IdFrom
+
+            bool autoritzed;
+
+            if (Equals(user, default))
+            {
+                user = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(ContextoHttp));
+            }
+
+            if (Equals(operacion, default))
+            {
+
+            }else if (operacion.Id != transaccionDTO.IdOperacion)
+            {
+                throw new Exception($"la {nameof(Operacion)} con {nameof(Operacion.Id)}={transaccionDTO.IdOperacion} no es la misma que la enviada {nameof(Operacion.Id)}={operacion.Id}");
+            }
+
+            autoritzed= user.Id == transaccionDTO.IdFrom
                               || user.IsModTransaccion;
 
             if (!autoritzed)
@@ -225,7 +242,7 @@ namespace BancDelTemps.ApiRest.Controllers
             if (autoritzed)
             {
 
-                transaccionDTO.Id = DoTransaccion(transaccionDTO,operacion).Id;
+                transaccionDTO.Id = (await DoTransaccion(transaccionDTO,operacion,user)).Id;
                 result = Ok(transaccionDTO);
             }
 
@@ -238,27 +255,63 @@ namespace BancDelTemps.ApiRest.Controllers
             }
             return result;
         }
-        public async Task<Transaccion> DoTransaccion(TransaccionDTO transaccionDTO, Operacion operacion=default)
+        public async Task<Transaccion> DoTransaccion([NotNull] TransaccionDTO transaccionDTO, Operacion operacion=default,User userFrom=default,User mod=default)
         {
             Transaccion transaccion=default;
+
+            #region Validar Parametros
             if (Equals(operacion, default))
             {
                 operacion = await Context.Operaciones.FindAsync(transaccionDTO.IdOperacion);
+            }else if (transaccionDTO.IdOperacion != operacion.Id)
+            {
+                throw new Exception($"La {nameof(Operacion)} '{transaccionDTO.IdOperacion}' no coincide con la enviada '{operacion.Id}'");
             }
-            //aqui pongo los criterios para poder hacer la operacion
-            //si se puede hacer creo la transacción
-            operacion.Completada = transaccionDTO.IsComplete;
-            Context.Operaciones.Update(operacion);
-            transaccion = transaccionDTO.ToTransaccion();
-            await Context.Transacciones.AddAsync(transaccion);
-            await Context.SaveChangesAsync();
+            if (Equals(userFrom, default))
+            {
+                userFrom =  Context.GetUserPermisoWithTransacciones(transaccionDTO.IdFrom);
+            }
+            else if (transaccionDTO.IdFrom != userFrom.Id)
+            {
+                throw new Exception($"El {nameof(Models.User)} '{await Context.Users.FindAsync(transaccionDTO.IdFrom)}' no coincide con el enviado '{userFrom}'");
+            }
+            if (Equals(mod, default))
+            {
+                mod =Context.GetUserPermiso( Models.User.GetEmailFromHttpContext(ContextoHttp));
+                if (!mod.IsModTransaccion)
+                {
+                    mod = default;
+                }
+            } else if (!mod.IsModTransaccion)
+            {
+                throw new Exception($"El {nameof(Models.User)} {nameof(mod)}={mod} no tiene el permiso '{Permiso.MODTRANSACCION}' ({nameof(mod.IsModTransaccion)})");
+            }
+            #endregion
+
+            if (userFrom.TiempoDisponible - transaccionDTO.Minutos >= 0)
+            {
+                //aqui pongo los criterios para poder hacer la operacion
+                //si se puede hacer creo la transacción
+                if (!operacion.IsRevisada || !Equals(mod, default))
+                {
+                    operacion.Completada = transaccionDTO.IsComplete;
+                    Context.Operaciones.Update(operacion);
+                    transaccion = transaccionDTO.ToTransaccion();
+                    if (!Equals(mod, default))
+                    {
+                        transaccion.UserValidator = mod;
+                    }
+                    await Context.Transacciones.AddAsync(transaccion);
+                    await Context.SaveChangesAsync();
+                }
+            }
             return transaccion;
         }
 
-        [HttpPut("")]
+        [HttpPut]
         public async Task<IActionResult> UpdateTransaccion(TransaccionDTO transaccionDTO)
         {
-            return await ModifyTransaccion(transaccionDTO, (transaccion, tDTO) =>
+            return await ModifyTransaccion(transaccionDTO,async (transaccion, tDTO) =>
             {
                 IActionResult result;
                 User user = Context.Users.Find(tDTO.IdTo);
@@ -272,37 +325,106 @@ namespace BancDelTemps.ApiRest.Controllers
                 }
                 else
                 {
-                    transaccion.Minutos = tDTO.Minutos;
-                    transaccion.UserToId = tDTO.IdTo;
-                    transaccion.Fecha = tDTO.Fecha;
-                    transaccion.UserValidator = default;
-                    transaccion.UserValidatorId = default;
-                    Context.Transacciones.Update(transaccion);
+                    await DoTransaccionUpdate(tDTO,default,transaccion);
                     result = Ok();
                 }
                 return result;
             });
         }
 
-        [HttpDelete("")]
+        public async Task<bool> DoTransaccionUpdate([NotNull] TransaccionDTO tDTO,User mod=default, Transaccion transaccion=default,User userFrom=default,Operacion operacion=default)
+        {
+            bool puedeHacerla;
+
+            #region Validar Parametros
+            if (Equals(transaccion,default))
+            {
+                transaccion =await Context.Transacciones.FindAsync(tDTO.Id);
+                if (Equals(transaccion, default))
+                    throw new Exception($"{nameof(Transaccion)} {tDTO.Id} no encontrada!!");
+            }
+            else if (tDTO.Id != transaccion.Id)
+            {
+                throw new Exception($"La {nameof(Transaccion)} '{tDTO.Id}' no se corresponde con la enviada '{transaccion.Id}'");
+            }
+            if (Equals(operacion, default))
+            {
+                operacion = await Context.Operaciones.FindAsync(tDTO.IdOperacion);
+                if (Equals(operacion, default))
+                    throw new Exception($"{nameof(Operacion)} {tDTO.IdOperacion} no encontrada!!");
+            }
+            else if (tDTO.IdOperacion != operacion.Id)
+            {
+                throw new Exception($"La {nameof(Operacion)} '{tDTO.Id}' no se corresponde con la enviada '{transaccion.Id}'");
+            }
+            if (Equals(userFrom, default))
+            {
+                userFrom = Context.GetUserPermisoWithTransacciones(tDTO.IdFrom);
+
+            }else if (tDTO.IdFrom != userFrom.Id)
+            {
+                throw new Exception($"El {nameof(Models.User)} {userFrom} no se corresponde con el enviado {await Context.Users.FindAsync(tDTO.IdFrom)}");
+            }
+            #endregion
+
+            puedeHacerla = tDTO.Minutos <= transaccion.Minutos || userFrom.TiempoDisponible > (tDTO.Minutos - transaccion.Minutos);
+
+            if (puedeHacerla)
+            {
+                if (Equals(mod, default))
+                {
+                    mod = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(ContextoHttp));
+                    if (!mod.IsModTransaccion)
+                    {
+                        mod = default;
+                    }
+                }else if (!mod.IsModTransaccion)
+                {
+                    throw new Exception($"El {nameof(Models.User)} {nameof(mod)}='{mod}' no tiene el permiso '{Permiso.MODTRANSACCION}' ({nameof(mod.IsModTransaccion)})");
+                }
+                if (!operacion.IsRevisada || !Equals(mod, default))
+                {
+                    transaccion.Minutos = tDTO.Minutos;
+                    transaccion.UserToId = tDTO.IdTo;
+                    transaccion.Fecha = tDTO.Fecha;
+                    if (!Equals(mod, default))
+                    {
+                        transaccion.UserValidator = mod;
+
+                    }
+                    else
+                    {//como se ha modificado se tiene que volver a validar!
+                        transaccion.UserValidator = default;
+                        transaccion.UserValidatorId = default;
+                    }
+
+                    Context.Transacciones.Update(transaccion);
+                }
+                else puedeHacerla = false;
+            }
+            return puedeHacerla;
+        }
+
+        [HttpDelete]
         public async Task<IActionResult> DeleteTransaccion(TransaccionDTO transaccionDTO)
         {
             return await ModifyTransaccion(transaccionDTO, (transaccion, tDTO) =>
             {
                 Context.Transacciones.Remove(transaccion);
-                return Ok();
+                return Task.FromResult((IActionResult)Ok());
 
             });
 
         }
 
-        async Task<IActionResult> ModifyTransaccion(TransaccionDTO transaccionDTO, ModifyTransaccionDelegate metodoModifyTransaccion)
+        async Task<IActionResult> ModifyTransaccion(TransaccionDTO transaccionDTO,[NotNull] ModifyTransaccionDelegate metodoModifyTransaccion)
         {
             IActionResult result;
             User user;
             Operacion operacion;
             Transaccion transaccion;
             TransaccionDelegada transaccionDelegada;
+
             if (Equals(transaccionDTO, default))
             {
                 result = BadRequest();
@@ -329,7 +451,7 @@ namespace BancDelTemps.ApiRest.Controllers
                         {
                             if (transaccion.CanBack || user.IsModTransaccion)
                             {
-                                result = metodoModifyTransaccion(transaccion, transaccionDTO);
+                                result = await metodoModifyTransaccion(transaccion, transaccionDTO);
                                 if (result is OkResult)
                                 {
                                     await Context.SaveChangesAsync();
@@ -462,7 +584,7 @@ namespace BancDelTemps.ApiRest.Controllers
             });
         }
 
-        async Task<IActionResult> ModifyTransaccionDelegada(TransaccionDelegadaDTO transaccionDelegadaDTO, ModifyTransaccionDelegadaDelegate metodoModifyTransaccion)
+        async Task<IActionResult> ModifyTransaccionDelegada(TransaccionDelegadaDTO transaccionDelegadaDTO,[NotNull] ModifyTransaccionDelegadaDelegate metodoModifyTransaccion)
         {
             IActionResult result;
             User user;

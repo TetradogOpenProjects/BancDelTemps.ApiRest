@@ -49,7 +49,7 @@ namespace BancDelTemps.ApiRest.Models
             Id = s.Id;
             IdFrom = s.UserFromId;
             IdTo = s.UserToId;
-            IdValidator = s.UserValidatorId;
+            IsValidated = s.IsValidated;
             Fecha = s.Fecha;
             Minutos = s.Minutos;
             IdOperacion = s.OperacionId;
@@ -58,7 +58,7 @@ namespace BancDelTemps.ApiRest.Models
         public bool IsComplete { get; set; }
         public long IdFrom { get; set; }
         public long IdTo { get; set; }
-        public long? IdValidator { get; set; }
+        public bool IsValidated { get; set; }
         public long IdOperacion { get; set; }
         public DateTime Fecha { get; set; }
         public int Minutos { get; set; }
@@ -72,7 +72,6 @@ namespace BancDelTemps.ApiRest.Models
                 UserToId = IdTo,
                 Fecha = Fecha,
                 Minutos = Minutos,
-                UserValidatorId = IdValidator,
                 OperacionId = IdOperacion
 
             };

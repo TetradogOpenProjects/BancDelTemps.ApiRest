@@ -95,7 +95,8 @@ namespace BancDelTemps.ApiRest.Models
         public int TotalMinutosInPorValidar=>TransaccionesIn.Where(t=>t.Operacion.IsOk).Sum(t => t.Minutos);
         [NotMapped]
         public int TotalMinutosFromPorValidar=>TransaccionesFrom.Where(t=>t.Operacion.IsOk).Sum(t => t.Minutos);
-
+        [NotMapped]
+        public int TiempoDisponible => TotalMinutos - TotalMinutosFromPorValidar - TotalMinutosInPorValidar;
 
         public override string ToString()
         {

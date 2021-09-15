@@ -25,7 +25,7 @@ namespace BancDelTemps.ApiRest.Controllers
             TransaccionesController = new TransaccionesController(Context);
         }
 
-        [HttpGet("")]
+        [HttpGet]
         public async Task<IActionResult> GetAll()
         {
             IActionResult result;
@@ -63,8 +63,8 @@ namespace BancDelTemps.ApiRest.Controllers
             else result = Forbid();
             return result;
         }
-        [HttpPost("")]
-        public async Task<IActionResult> SetGift(TransaccionDTO transaccionDTO)
+        [HttpPost]
+        public async Task<IActionResult> AddGift(TransaccionDTO transaccionDTO)
         {
             User user;
             Transaccion transaccion;
@@ -96,6 +96,46 @@ namespace BancDelTemps.ApiRest.Controllers
                         }
                         else result = BadRequest();
 
+                    }
+                    else result = Unauthorized();
+                }
+            }
+            else result = Forbid();
+
+            return result;
+        }
+        [HttpPut]
+        public async Task<IActionResult> UpdateGift(TransaccionDTO transaccionDTO)
+        {
+            IActionResult result;
+            User user;
+            
+            if (ContextoHttp.IsAuthenticated)
+            {
+                if (Equals(transaccionDTO, default))
+                {
+                    result = BadRequest();
+                }
+                else
+                {
+                    user = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(ContextoHttp));
+                    if (user.Id == transaccionDTO.IdFrom || user.IsModGift)
+                    {
+                        if (Context.Gifts.Where(g => g.TransaccionId == transaccionDTO.Id).Any())
+                        {
+                            if (await TransaccionesController.DoTransaccionUpdate(transaccionDTO, user.IsModGift && user.IsModTransaccion ? user : default))
+                            {
+                                result = Ok();
+                            }
+                            else
+                            {
+                                result = Forbid();
+                            }
+                        }                        
+                        else
+                        {
+                            result = NotFound();
+                        }
                     }
                     else result = Unauthorized();
                 }
