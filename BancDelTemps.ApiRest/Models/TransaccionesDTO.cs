@@ -8,7 +8,7 @@ namespace BancDelTemps.ApiRest.Models
     {
 
         public TransaccionesDTO() { }
-        public TransaccionesDTO(User user, Context context, long ticksLastUpdate)
+        public TransaccionesDTO([NotNull] User user,[NotNull] Context context, long ticksLastUpdate)
         {
             IdUser = user.Id;
             In = user.TransaccionesIn.Where(t => t.Fecha.Ticks > ticksLastUpdate)
@@ -33,7 +33,7 @@ namespace BancDelTemps.ApiRest.Models
     public class TransaccionesGrupoDTO
     {
 
-        public TransaccionesGrupoDTO( IEnumerable<Transaccion> transacciones)
+        public TransaccionesGrupoDTO([NotNull] IEnumerable<Transaccion> transacciones)
         {
             Others = transacciones.Select(t => new TransaccionDTO(t));
         }
@@ -44,7 +44,7 @@ namespace BancDelTemps.ApiRest.Models
     {
 
         public TransaccionDTO() { }
-        public TransaccionDTO(Transaccion s)
+        public TransaccionDTO([NotNull] Transaccion s)
         {
             Id = s.Id;
             IdFrom = s.UserFromId;
@@ -82,7 +82,7 @@ namespace BancDelTemps.ApiRest.Models
     {
         public TransaccionDelegadaDTO() { }
 
-        public TransaccionDelegadaDTO(TransaccionDelegada transaccion)
+        public TransaccionDelegadaDTO([NotNull] TransaccionDelegada transaccion)
         {
             IdOperacion = transaccion.OperacionId;
             IdUsuarioADelegar = transaccion.UserId;
