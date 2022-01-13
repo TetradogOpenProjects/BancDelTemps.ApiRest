@@ -5,7 +5,7 @@ namespace BancDelTemps.ApiRest.Models
     public class UserPermiso
     {
         public UserPermiso() { }
-        public UserPermiso(User userGranter, User userToAdd, Permiso permiso)
+        public UserPermiso([NotNull] User userGranter,[NotNull] User userToAdd,[NotNull] Permiso permiso)
         {
             GrantedBy = userGranter;
             GrantedDate = DateTime.UtcNow;
