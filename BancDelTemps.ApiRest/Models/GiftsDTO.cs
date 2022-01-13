@@ -8,9 +8,9 @@ namespace BancDelTemps.ApiRest.Models
     {
        
         public GiftsDTO() { }
-        public GiftsDTO(User user, Context context) : this(user.Id, context) { }
+        public GiftsDTO([NotNull] User user,[NotNull] Context context) : this(user.Id, context) { }
        
-        public GiftsDTO(long userId,Context context)
+        public GiftsDTO(long userId,[NotNull] Context context)
         {
             UserId = userId;
             Recived = context.GetUserGifts(userId)
@@ -29,7 +29,7 @@ namespace BancDelTemps.ApiRest.Models
     public class GiftDTO{
 
         public GiftDTO() { }
-        public GiftDTO(Gift gift){
+        public GiftDTO([NotNull] Gift gift){
             GiftId=gift.Id;
             TransaccionId=gift.TransaccionId;
         }
