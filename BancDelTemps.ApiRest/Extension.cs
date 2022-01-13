@@ -24,12 +24,12 @@ namespace BancDelTemps.ApiRest
         }
         public static void RemoveFieldAutoAdded(this ModelBuilder modelBuilder,params Type[] typesContext)
         {
-            string[] properties;
+            IEnumerable<string> properties;
             IMutableEntityType metadata;
             for (int i = 0; i < typesContext.Length; i++)
             {
                 metadata = modelBuilder.Entity(typesContext[i].FullName).Metadata;
-                properties = metadata.GetDeclaredProperties().Select(p => p.Name).Except(typesContext[i].GetPropiedadesTipo().Select(p => p.Nombre)).ToArray();
+                properties = metadata.GetDeclaredProperties().Select(p => p.Name).Except(typesContext[i].GetPropiedadesTipo().Select(p => p.Nombre));
                 //reviso los modelos para que no tengan campos nuevos
                 foreach (string propiedadAQuitar in properties)
                     metadata.RemoveProperty(propiedadAQuitar);
