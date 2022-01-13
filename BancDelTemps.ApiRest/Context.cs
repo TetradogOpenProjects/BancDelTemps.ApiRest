@@ -129,15 +129,16 @@ namespace BancDelTemps.ApiRest
         }
         public User GetUserPermisoWithTransacciones([NotNull] string email)
         {
+            email=email.ToLower();
             return GetUsersPermisosWithTransacciones().Where(u => u.Email.Equals(email))
                                                       .FirstOrDefault();
         }
 
-        public Transaccion GetTransaccion(Operacion operacion)
+        public Transaccion GetTransaccion([NotNull] Operacion operacion)
         {
             return Transacciones.Include(t=>t.Operacion).Where(t => t.OperacionId.Equals(operacion.Id)).FirstOrDefault();
         }
-        public TransaccionDelegada GetTransaccionDelegada(Operacion operacion)
+        public TransaccionDelegada GetTransaccionDelegada([NotNull] Operacion operacion)
         {
             return TransaccionesDelegadas.Where(t => t.OperacionId.Equals(operacion.Id)).FirstOrDefault();
         }
@@ -167,7 +168,8 @@ namespace BancDelTemps.ApiRest
         }
         public bool ExistUser([NotNull] string email)
         {
-            return !Equals(Users.Where(u => u.Email.Equals(email)).FirstOrDefault(), default);
+            email=email.ToLower();
+            return Users.Any(u => u.Email.Equals(email));
         }
         public bool ExistUser(long idUsuario)
         {
