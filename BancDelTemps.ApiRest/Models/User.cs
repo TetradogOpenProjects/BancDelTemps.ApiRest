@@ -121,7 +121,7 @@ namespace BancDelTemps.ApiRest.Models
                                         claims, expires: DateTime.UtcNow + (Equals(expiraToken, default(TimeSpan)) ? DefaultExpireTokenTime : expiraToken),
                                         signingCredentials: signIn);
         }
-        public static string GetEmailFromHttpContext(IHttpContext context)
+        public static string GetEmailFromHttpContext([NotNull] IHttpContext context)
         {
             const int EMAIL = 4;//si cambio el orden de los claim en nameof(GetToken) tengo que mirar donde queda el Email de nuevo!!
             string[] claims = context.GetClaimsValueFirstIdentity();
