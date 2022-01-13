@@ -29,7 +29,7 @@ namespace BancDelTemps.ApiRest.Models
     public class OperacionDTO
     {
         public OperacionDTO() { }
-        public OperacionDTO(Operacion operacion)
+        public OperacionDTO([NotNull] Operacion operacion)
         {
             Id = operacion.Id;
             UserId = operacion.UserId;
