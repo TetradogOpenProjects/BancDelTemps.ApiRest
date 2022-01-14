@@ -169,7 +169,7 @@ namespace BancDelTemps.ApiRest
         public bool ExistUser([NotNull] string email)
         {
             email=email.ToLower();
-            return Users.Any(u => u.Email.Equals(email));
+            return Users.Where(u => u.Email.Equals(email)).Any();
         }
         public bool ExistUser(long idUsuario)
         {
