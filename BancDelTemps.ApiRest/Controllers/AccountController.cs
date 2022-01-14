@@ -187,9 +187,11 @@ namespace BancDelTemps.ApiRest.Controllers
                                         userPermiso = Context.PermisosUsuarios.Where(p => p.PermisoId.Equals(permiso.Id) && p.UserId.Equals(userToAdd.Id)).FirstOrDefault();
                                         if (!Equals(userPermiso, default))
                                         {
+                                            if(! userPermiso.IsActive){//asi si no es necesario no pierde quien y cuando se dio por última vez. 
                                             userPermiso.GrantedBy = userGranter;
                                             userPermiso.GrantedDate = DateTime.UtcNow;
                                             Context.PermisosUsuarios.Update(userPermiso);
+                                           } 
                                         }
                                         else
                                         {
