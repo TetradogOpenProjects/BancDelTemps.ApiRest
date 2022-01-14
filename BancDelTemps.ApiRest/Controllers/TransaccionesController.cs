@@ -218,7 +218,7 @@ namespace BancDelTemps.ApiRest.Controllers
             }
 
             if (Equals(operacion, default))
-            {
+            {//por mirar... 
 
             }else if (operacion.Id != transaccionDTO.IdOperacion)
             {
