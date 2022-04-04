@@ -60,23 +60,17 @@ namespace BancDelTemps.ApiRest.Testing
     public delegate void TestUserMethod(User user);
     public abstract class TestBase
     {
-        const string DEFAULT = "server=localhost;port=3322;user id=root;password=admin;database=BancDelTemps";
+        private const string DEFAULT = "server=localhost;port=3306;user id=root;password=root;database=BancDelTempsBD";
         public TestBase()
         {
             DbContextOptionsBuilder<Context> optionsBilder = new DbContextOptionsBuilder<Context>();
-            optionsBilder.UseMySql(DEFAULT, new MariaDbServerVersion(new Version(10, 5, 10)));
+            optionsBilder.UseMySql(DEFAULT, new MariaDbServerVersion(new Version(10, 6, 7)));
             Context = new Context(optionsBilder.Options);
-            for (int i = 0; i < Permiso.Todos.Length; i++)
-            {
-                if (!Context.Permisos.Any(p => p.Nombre.Equals(Permiso.Todos[i])))
-                    Context.Permisos.Add(new Permiso() { Nombre = Permiso.Todos[i] });
-            }
-            Context.SaveChanges();
             Configuration = new Configuration();
             ContextoHttp = new MockHttpContext();
 
         }
-
+        
         public MockHttpContext ContextoHttp { get; private set; }
         public Configuration Configuration { get; private set; }
         public Context Context { get; private set; }
