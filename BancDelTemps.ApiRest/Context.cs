@@ -90,6 +90,7 @@ namespace BancDelTemps.ApiRest
 
 
         }
+        
         private void SeedDataBase(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Permiso>().HasData(Permiso.Todos.Select(p => new Permiso() { Nombre = p }));

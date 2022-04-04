@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "HHWvzcjYQ8TIIlqjwfKEe2yst+jFE9XB/K4HKhgp738=",
+  "Source": "BancDelTemps.ApiRest",
+  "BasePath": "_content/BancDelTemps.ApiRest",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}

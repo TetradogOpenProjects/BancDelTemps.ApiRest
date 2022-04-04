@@ -255,7 +255,7 @@ namespace BancDelTemps.ApiRest.Controllers
             }
             return result;
         }
-        public async Task<Transaccion> DoTransaccion([NotNull] TransaccionDTO transaccionDTO, Operacion operacion=default,User userFrom=default,User mod=default)
+        internal async Task<Transaccion> DoTransaccion([NotNull] TransaccionDTO transaccionDTO, Operacion operacion = default, User userFrom = default, User mod = default)
         {
             Transaccion transaccion=default;
 
@@ -332,7 +332,7 @@ namespace BancDelTemps.ApiRest.Controllers
             });
         }
 
-        public async Task<bool> DoTransaccionUpdate([NotNull] TransaccionDTO tDTO,User mod=default, Transaccion transaccion=default,User userFrom=default,Operacion operacion=default)
+        internal async Task<bool> DoTransaccionUpdate([NotNull] TransaccionDTO tDTO,User mod=default, Transaccion transaccion=default,User userFrom=default,Operacion operacion=default)
         {
             bool puedeHacerla;
 

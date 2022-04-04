@@ -38,7 +38,7 @@ namespace BancDelTemps.ApiRest
             });
 
             services.AddDbContextPool<Context>(o => o.UseMySql(
-                  Configuration.GetConnectionString("Default"), new MariaDbServerVersion(new Version(10, 5, 10)))
+                  Configuration.GetConnectionString("Default"), new MariaDbServerVersion(new Version(10, 6, 7)))
                  );
 
             services.AddAuthentication(option =>
@@ -71,6 +71,8 @@ namespace BancDelTemps.ApiRest
                 options.ClientSecret = Configuration["Google:ClientSecret"];
                 options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;//imprescindible sino usa el JWT
             });
+            
+          
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

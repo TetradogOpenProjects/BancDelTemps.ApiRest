@@ -1,0 +1,5 @@
+
+BancDelTemps.ApiRest.Testing/bin/Debug/net6.0/appsettings.json
+*.dll
+*.exe
+*.pdb

@@ -127,7 +127,7 @@ namespace BancDelTemps.ApiRest.Controllers
 
         }
         //así cuando haga los test unitarios podré tener los token
-        public async Task<IActionResult> GetTokenUser(User user)
+        internal async Task<IActionResult> GetTokenUser(User user)
         {
             JwtSecurityToken token;
             if (!Context.ExistUser(user))

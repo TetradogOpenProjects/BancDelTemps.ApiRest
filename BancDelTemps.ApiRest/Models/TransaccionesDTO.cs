@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace BancDelTemps.ApiRest.Models
@@ -44,15 +45,15 @@ namespace BancDelTemps.ApiRest.Models
     {
 
         public TransaccionDTO() { }
-        public TransaccionDTO([NotNull] Transaccion s)
+        public TransaccionDTO([NotNull] Transaccion transaccion)
         {
-            Id = s.Id;
-            IdFrom = s.UserFromId;
-            IdTo = s.UserToId;
-            IsValidated = s.IsValidated;
-            Fecha = s.Fecha;
-            Minutos = s.Minutos;
-            IdOperacion = s.OperacionId;
+            Id = transaccion.Id;
+            IdFrom = transaccion.UserFromId;
+            IdTo = transaccion.UserToId;
+            IsValidated = transaccion.IsValidated;
+            Fecha = transaccion.Fecha;
+            Minutos = transaccion.Minutos;
+            IdOperacion = transaccion.OperacionId;
         }
         public long? Id { get; set; }
         public bool IsComplete { get; set; }
