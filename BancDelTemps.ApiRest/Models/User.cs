@@ -43,6 +43,11 @@ namespace BancDelTemps.ApiRest.Models
 
         public long Id { get; set; }
         public DateTime JoinDate { get; set; }
+        public DateTime? LastUpdateDate { get; set; }
+        
+        [NotMapped]
+        public DateTime LastUpdate => LastUpdateDate.HasValue ? LastUpdateDate.Value : JoinDate;
+        
         [Required,MaxLength(50)]
         public string Name { get; set; }
         [Required, MaxLength(150)]
@@ -81,6 +86,8 @@ namespace BancDelTemps.ApiRest.Models
         public bool IsModGift => IsAdmin || PermisosActivosName.Any(p => Permiso.MODGIFT.Equals(p));
         [NotMapped]
         public bool IsModOperacion => IsAdmin || PermisosActivosName.Any(p => Permiso.MODOPERACION.Equals(p));
+        [NotMapped]
+        public bool IsModUser => IsAdmin || PermisosActivosName.Any(p => Permiso.MODUSER.Equals(p));
         public ICollection<Transaccion> TransaccionesFrom { get; set; }
         public ICollection<Transaccion> TransaccionesIn { get; set; }
         public ICollection<TransaccionDelegada> TransaccionesSigned { get; set; }
@@ -140,6 +147,8 @@ namespace BancDelTemps.ApiRest.Models
             Surname = user.Surname;
             IsValidated = user.IsValidated;
             IsOnHoliDays = user.IsOnHolidays;
+            StartHolidays = user.StartHolidays;
+            EndHolidays = user.EndHolidays;
             Email = user.Email;
             JoinDate = user.JoinDate;
             Permisos = user.PermisosActivosName;
@@ -151,9 +160,14 @@ namespace BancDelTemps.ApiRest.Models
         public string Name { get; set; }
         public string Surname { get; set; }
         public bool IsValidated { get; set; }
-        public bool IsOnHoliDays { get; set; }
+
         public string Email { get; set; }
+        public string NewEmail { get; set; }
         public DateTime JoinDate { get; set; }
+
+        public bool IsOnHoliDays { get; set; }
+        public DateTime? StartHolidays { get; set; }
+        public DateTime? EndHolidays { get; set; }
         public IEnumerable<string> Permisos { get; set; }
         public int TotalMinutos { get; set; }
         public int TotalMinutosInPorValidar{get;set;}

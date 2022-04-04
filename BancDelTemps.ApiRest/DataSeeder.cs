@@ -5,7 +5,7 @@ using System.Linq;
 namespace BancDelTemps.ApiRest
 {
     public static class DataSeeder
-    {  
+    {
         public static void SeedAll(this Context context)
         {
             context.SeedPermisos();
@@ -15,19 +15,24 @@ namespace BancDelTemps.ApiRest
             List<Permiso> permisos;
             context.Database.EnsureCreated();
 
-            if (!context.Permisos.Any())
+
+            permisos = new List<Permiso>();
+            for (int i = 0; i < Permiso.Todos.Length; i++)
             {
-                permisos = new List<Permiso>();
-                for (int i = 0; i < Permiso.Todos.Length; i++)
+                if (!context.Permisos.Any(p => p.Nombre == Permiso.Todos[i]))
                 {
-                   permisos.Add(new Permiso { Nombre = Permiso.Todos[i] });
+                    permisos.Add(new Permiso { Nombre = Permiso.Todos[i] });
                 }
+            }
+            if (permisos.Count > 0)
+            {
                 context.Permisos.AddRange(permisos);
                 context.SaveChanges();
             }
-        }
-    
 
-        
+        }
+
+
+
     }
 }

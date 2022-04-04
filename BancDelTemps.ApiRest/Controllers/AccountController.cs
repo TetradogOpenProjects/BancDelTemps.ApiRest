@@ -60,11 +60,11 @@ namespace BancDelTemps.ApiRest.Controllers
                 user = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(ContextoHttp));
                 if (user.CanListUser)
                 {
-                    result = Ok(Context.GetUsersPermisosWithTransacciones().Where(u=>u.JoinDate.Ticks>ticksUTCLastUser).Select(u => new UserDTO(u)));
+                    result = Ok(Context.GetUsersPermisosWithTransacciones().Where(u=>u.LastUpdate.Ticks>ticksUTCLastUser).Select(u => new UserDTO(u)));
                 }
                 else if (user.IsValidated)
                 {
-                    result = Ok(Context.Users.Where(u => u.IsValidated && u.JoinDate.Ticks > ticksUTCLastUser).OrderBy(u => u.JoinDate).Select(u => new UserBasicDTO(u)));
+                    result = Ok(Context.Users.Where(u => u.IsValidated && u.LastUpdate.Ticks > ticksUTCLastUser).OrderBy(u => u.LastUpdate).Select(u => new UserBasicDTO(u)));
                 }
                 else
                 {
@@ -347,5 +347,103 @@ namespace BancDelTemps.ApiRest.Controllers
             return result;
         }
 
+
+        //gestionar todo lo que se puede configurar de un usuario
+        [HttpPut]
+        [Authorize]
+        public async Task<IActionResult> UpdateUser(UserDTO userToUpdateData)
+        {
+            IActionResult result;
+            User user,userToUpdate;
+            if (ContextoHttp.IsAuthenticated)
+            {
+                user= Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(ContextoHttp));
+                if (Equals(userToUpdateData.Email, user.Email))
+                {
+                    //puede cambiar algunos datos
+                    user.StartHolidays = userToUpdateData.StartHolidays;
+                    user.EndHolidays = userToUpdateData.EndHolidays;
+
+                    user.LastUpdateDate = DateTime.Now;
+                    Context.Users.Update(user);
+                    await Context.SaveChangesAsync();
+                    result = Ok();
+                }
+                else if (user.IsModUser)
+                {
+                    userToUpdate = Context.GetFullUser(userToUpdateData.Email);
+                    if (Equals(userToUpdate, default))
+                    {
+                        result = NotFound();
+                    }
+                    else if (userToUpdate.PermisosActivos.Any())
+                    {
+                        //only admin can edit
+                        if (user.IsAdmin)
+                        {
+                            //puede cambiarlos todos
+                            
+                            result = await UpdateDataUser(userToUpdate, userToUpdateData);
+                        }
+                        else
+                        {
+                            result = Unauthorized();
+                        }
+                    }
+                    else
+                    {
+                        
+                        
+                        //puede cambiarlos todos
+                        result = await UpdateDataUser(userToUpdate, userToUpdateData);
+                    }
+               
+                }
+                 
+                else
+                {
+                    result = Unauthorized();
+                }
+
+            }
+            else result = Forbid();
+            return result;
+        }
+
+        private async Task<IActionResult> UpdateDataUser(User userToUpdate, UserDTO userToUpdateData)
+        {
+            IActionResult result=Ok();
+            if (!Equals(userToUpdateData.NewEmail, default) && !Equals(userToUpdateData.NewEmail, userToUpdateData.Email))
+            {
+                if (Equals(Context.GetUserPermiso(userToUpdateData.NewEmail), default))
+                {
+                    userToUpdate.Email = userToUpdateData.NewEmail;
+                }
+                else
+                {
+                    result = Conflict($"El email '{userToUpdateData.NewEmail}' ya está en uso");
+                }
+            }
+            if (result is OkResult)
+            {
+                if (!Equals(userToUpdateData.Name, default))
+                {
+                    userToUpdate.Name = userToUpdateData.Name;
+                }
+                if (!Equals(userToUpdateData.Surname, default))
+                {
+                    userToUpdate.Surname = userToUpdateData.Surname;
+                }
+                userToUpdate.StartHolidays = userToUpdateData.StartHolidays;
+                userToUpdate.EndHolidays = userToUpdateData.EndHolidays;
+                userToUpdate.JoinDate = userToUpdateData.JoinDate;
+
+                userToUpdate.LastUpdateDate = DateTime.Now;
+                Context.Users.Update(userToUpdate);
+                await Context.SaveChangesAsync();
+            }
+            
+            return result;
+        }
     }
 }
