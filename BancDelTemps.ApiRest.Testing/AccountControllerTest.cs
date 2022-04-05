@@ -58,6 +58,7 @@ namespace BancDelTemps.ApiRest.Testing
             Assert.True(AccountController.ValidateEmail(email));
         }
         [Theory]
+        [InlineData("gabriel.cat.developer@hotmail.com")]
         [InlineData(".gabriel.cat.developer@gmail.com")]
         [InlineData("@gmail.com")]
         public void ValidationEmailIsFalse(string email)

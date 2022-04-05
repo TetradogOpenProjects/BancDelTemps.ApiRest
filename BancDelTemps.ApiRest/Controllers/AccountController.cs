@@ -19,7 +19,7 @@ namespace BancDelTemps.ApiRest.Controllers
     [ApiController]
     public class AccountController : Controller
     {
-        
+        public static string[] AccountEmailServerValid =>new string[] { "gmail", "googlemail" };
         Context Context { get; set; }
         IConfiguration Configuration { get; set; }
         public IHttpContext ContextoHttp { get; set; }
@@ -556,7 +556,14 @@ namespace BancDelTemps.ApiRest.Controllers
         {
             //se asegura que el email esté bien formado 
             const string VALIDATEEMAILPATTERN = @"^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$";
-            return System.Text.RegularExpressions.Regex.IsMatch(emailToValidate, VALIDATEEMAILPATTERN);
+            string server;
+            bool isValid= System.Text.RegularExpressions.Regex.IsMatch(emailToValidate, VALIDATEEMAILPATTERN);
+            if (isValid)
+            {
+                server = emailToValidate.Split('@')[1].Split('.')[0];
+                isValid = AccountEmailServerValid.Any(s => string.Equals(s, server, StringComparison.OrdinalIgnoreCase));
+            }
+            return isValid;
         }
     }
 }
