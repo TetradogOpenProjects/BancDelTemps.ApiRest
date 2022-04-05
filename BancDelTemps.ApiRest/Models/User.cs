@@ -18,8 +18,10 @@ namespace BancDelTemps.ApiRest.Models
     [Index(nameof(Email), IsUnique = true, Name = nameof(Email) + "_uniqueContraint")]
     public class User
     {
+
         public const int INITTIME = 10 * 60;//10 horas
         public static TimeSpan DefaultExpireTokenTime { get; set; } = TimeSpan.FromDays(1);
+        public static TimeSpan SelfUnresiterTime { get; set; } = TimeSpan.FromDays(1);
         public User() {
             Permisos = new List<UserPermiso>();
             Granted = new List<UserPermiso>();
@@ -40,14 +42,22 @@ namespace BancDelTemps.ApiRest.Models
         }
 
         public string IdExterno { get; set; }
-
+        /// <summary>
+        /// Así si se ha equivocado de cuenta al hacer login se puede recuperar del error sin problemas
+        /// </summary>
+        public bool ValidatedRegister { get; set; }
         public long Id { get; set; }
         public DateTime JoinDate { get; set; }
         public DateTime? LastUpdateDate { get; set; }
         
         [NotMapped]
         public DateTime LastUpdate => LastUpdateDate.HasValue ? LastUpdateDate.Value : JoinDate;
-        
+
+        [NotMapped]
+        public bool CanSelfUnregister =>!ValidatedRegister && !IsValidated && HasTimeToRegister;
+        [NotMapped]
+        public bool HasTimeToRegister=> JoinDate > DateTime.UtcNow.Add(-SelfUnresiterTime);
+
         [Required,MaxLength(50)]
         public string Name { get; set; }
         [Required, MaxLength(150)]

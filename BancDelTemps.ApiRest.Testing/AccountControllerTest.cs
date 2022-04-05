@@ -50,6 +50,20 @@ namespace BancDelTemps.ApiRest.Testing
         {
             DoAction(default, GetUserInfo);
         }
+        [Theory]
+        [InlineData("gabriel.cat.developer@gmail.com")]
+        [InlineData("tetradog@gmail.com")]
+        public void ValidationEmailIsTrue(string email)
+        {
+            Assert.True(AccountController.ValidateEmail(email));
+        }
+        [Theory]
+        [InlineData(".gabriel.cat.developer@gmail.com")]
+        [InlineData("@gmail.com")]
+        public void ValidationEmailIsFalse(string email)
+        {
+            Assert.False(AccountController.ValidateEmail(email));
+        }
         private void GetUserInfo(User user)
         {
             IActionResult result = Controller.GetUser();

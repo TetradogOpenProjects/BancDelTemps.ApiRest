@@ -19,6 +19,7 @@ namespace BancDelTemps.ApiRest.Controllers
     [ApiController]
     public class AccountController : Controller
     {
+        
         Context Context { get; set; }
         IConfiguration Configuration { get; set; }
         public IHttpContext ContextoHttp { get; set; }
@@ -60,7 +61,7 @@ namespace BancDelTemps.ApiRest.Controllers
                 user = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(ContextoHttp));
                 if (user.CanListUser)
                 {
-                    result = Ok(Context.GetUsersPermisosWithTransacciones().Where(u=>u.LastUpdate.Ticks>ticksUTCLastUser).Select(u => new UserDTO(u)));
+                    result = Ok(Context.GetUsersPermisosWithTransacciones().Where(u =>u.ValidatedRegister && u.LastUpdate.Ticks > ticksUTCLastUser).OrderBy(u => u.LastUpdate).Select(u => new UserDTO(u)));
                 }
                 else if (user.IsValidated)
                 {
@@ -109,14 +110,14 @@ namespace BancDelTemps.ApiRest.Controllers
             AuthenticateResult googleResult;
             IActionResult result;
             User user;
-            
+
 
             googleResult = await HttpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 
             if (googleResult.Succeeded)
             {
                 user = new User(googleResult.Principal);
-                result =await GetTokenUser(user);
+                result = await GetTokenUser(user);
             }
             else
             {
@@ -148,9 +149,108 @@ namespace BancDelTemps.ApiRest.Controllers
             return Ok(token.WriteToken());
         }
 
+        [HttpPut("Register")]
+        [Authorize]
+        public async Task<IActionResult> Register()
+        {
+            IActionResult result;
+            User user;
+            if (ContextoHttp.IsAuthenticated)
+            {
+                user = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(ContextoHttp));
+
+                if (!user.ValidatedRegister)
+                {
+                    user.ValidatedRegister = true;
+                    Context.Users.Update(user);
+                    await Context.SaveChangesAsync();
+                }
+                result = Ok();
+
+
+
+            }
+            else result = Forbid();
+            return result;
+        }
+        [HttpDelete("Register")]
+        [Authorize]
+        public async Task<IActionResult> Unregister()
+        {
+            IActionResult result;
+            User user;
+            if (ContextoHttp.IsAuthenticated)
+            {
+                user = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(ContextoHttp));
+
+                if (user.CanSelfUnregister)
+                {
+                    Context.Users.Remove(user);
+                    await Context.SaveChangesAsync();
+                    result = Ok();
+                }
+                else result = Unauthorized();
+             
+
+
+
+            }
+            else result = Forbid();
+            return result;
+        }
+        [HttpDelete("Register/userId:long")]
+        [Authorize]
+        public async Task<IActionResult> UnRegister(long userId)
+        {
+            IActionResult result;
+            User user;
+            User userToRemove;
+            if (ContextoHttp.IsAuthenticated)
+            {
+                user = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(ContextoHttp));
+                if (user.IsModUser)
+                {
+                    userToRemove =await Context.Users.Where(u => Equals(u.Id, userId)).FirstOrDefaultAsync();
+                    if (!Equals(userToRemove, default))
+                    {
+                        Context.Users.Remove(userToRemove);
+                        await Context.SaveChangesAsync();
+                        result = Ok();
+                    }
+                    else result = NotFound();
+                }
+                else result = Unauthorized();
+            }
+            else result = Forbid();
+
+            return result;
+        }
+        [HttpDelete("Register/AllUndone")]
+        [Authorize]
+        public async Task<IActionResult> UnRegisterAllUnDone()
+        {
+            IActionResult result;
+            User admin;
+            User[] users;
+            if (ContextoHttp.IsAuthenticated)
+            {
+                admin = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(ContextoHttp));
+                if (admin.IsAdmin)
+                {
+                    users = await Context.Users.Where(u => !u.ValidatedRegister && !u.HasTimeToRegister).ToArrayAsync();
+                    Context.Users.RemoveRange(users);
+                    await Context.SaveChangesAsync();
+                    result = Ok(users.Select(u=>new UserBasicDTO(u)));
+                }
+                else result = Unauthorized();
+            }
+            else result = Forbid();
+            return result;
+        }
+        [Authorize]
         [HttpPut("Permisos")]
         [Authorize]
-        public IActionResult PermissionsPut(PermisoUserDTO permisoUserDTO)
+        public async Task<IActionResult> PermissionsPut(PermisoUserDTO permisoUserDTO)
         {
             IActionResult result;
             User userGranter;
@@ -179,36 +279,37 @@ namespace BancDelTemps.ApiRest.Controllers
                             for (int i = 0; i < permisoUserDTO.Permisos.Length; i++)
                             {
                                 permisoLow = permisoUserDTO.Permisos[i].ToLower();
-                                permiso = Context.Permisos.Where(p => p.Nombre.Equals(permisoLow)).FirstOrDefault();
+                                permiso =await Context.Permisos.Where(p => p.Nombre.Equals(permisoLow)).FirstOrDefaultAsync();
                                 if (!Equals(permiso, default))
                                 {
                                     try
                                     {
-                                        userPermiso = Context.PermisosUsuarios.Where(p => p.PermisoId.Equals(permiso.Id) && p.UserId.Equals(userToAdd.Id)).FirstOrDefault();
+                                        userPermiso =await Context.PermisosUsuarios.Where(p => p.PermisoId.Equals(permiso.Id) && p.UserId.Equals(userToAdd.Id)).FirstOrDefaultAsync();
                                         if (!Equals(userPermiso, default))
                                         {
-                                            if(! userPermiso.IsActive){//asi si no es necesario no pierde quien y cuando se dio por última vez. 
-                                            userPermiso.GrantedBy = userGranter;
-                                            userPermiso.GrantedDate = DateTime.UtcNow;
-                                            Context.PermisosUsuarios.Update(userPermiso);
-                                           } 
+                                            if (!userPermiso.IsActive)
+                                            {//asi si no es necesario no pierde quien y cuando se dio por última vez. 
+                                                userPermiso.GrantedBy = userGranter;
+                                                userPermiso.GrantedDate = DateTime.UtcNow;
+                                                Context.PermisosUsuarios.Update(userPermiso);
+                                            }
                                         }
                                         else
                                         {
                                             Context.PermisosUsuarios.Add(new UserPermiso(userGranter, userToAdd, permiso));
                                         }
-                                        Context.SaveChanges();
+                                        await Context.SaveChangesAsync();
                                         permisosOk.Add(permisoUserDTO.Permisos[i]);
                                     }
                                     catch { }
-                                    
+
                                 }
 
                             }
                             result = Ok(permisosOk);
                         }
                         else result = Forbid();//el usuario aun no se ha validado!
-                        
+
                     }
                     else result = NotFound();
 
@@ -222,7 +323,7 @@ namespace BancDelTemps.ApiRest.Controllers
 
         [HttpDelete("Permisos")]
         [Authorize]
-        public IActionResult PermissionsDelete(PermisoUserDTO permisoUserDTO)
+        public async Task<IActionResult> PermissionsDelete(PermisoUserDTO permisoUserDTO)
         {
             IActionResult result;
             User userRevoker;
@@ -251,24 +352,25 @@ namespace BancDelTemps.ApiRest.Controllers
                             for (int i = 0; i < permisoUserDTO.Permisos.Length; i++)
                             {
                                 permisoLow = permisoUserDTO.Permisos[i].ToLower();
-                                permiso = Context.Permisos.Where(p => p.Nombre.Equals(permisoLow)).FirstOrDefault();
+                                permiso =await  Context.Permisos.Where(p => p.Nombre.Equals(permisoLow)).FirstOrDefaultAsync();
                                 if (!Equals(permiso, default))
                                 {
-                                    userPermiso = Context.PermisosUsuarios.Where(p => p.PermisoId.Equals(permiso.Id) && p.UserId.Equals(userToRemove.Id)).FirstOrDefault();
+                                    userPermiso = await Context.PermisosUsuarios.Where(p => p.PermisoId.Equals(permiso.Id) && p.UserId.Equals(userToRemove.Id)).FirstOrDefaultAsync();
                                     if (!Equals(userPermiso, default))
                                     {
                                         try
                                         {
-                                            if(userPermiso.IsActive){
+                                            if (userPermiso.IsActive)
+                                            {
                                                 userPermiso.RevokedBy = userRevoker;
                                                 userPermiso.RevokedDate = DateTime.UtcNow;
                                                 Context.PermisosUsuarios.Update(userPermiso);
-                                                Context.SaveChanges();
+                                                await Context.SaveChangesAsync();
                                             }
                                             permisosOk.Add(permisoUserDTO.Permisos[i]);
                                         }
                                         catch { }
-                                        
+
 
                                     }
 
@@ -354,11 +456,11 @@ namespace BancDelTemps.ApiRest.Controllers
         public async Task<IActionResult> UpdateUser(UserDTO userToUpdateData)
         {
             IActionResult result;
-            User user,userToUpdate;
+            User user, userToUpdate;
             if (ContextoHttp.IsAuthenticated)
             {
-                user= Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(ContextoHttp));
-                if (Equals(userToUpdateData.Email, user.Email))
+                user = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(ContextoHttp));
+                if (string.Equals(userToUpdateData.Email, user.Email, StringComparison.OrdinalIgnoreCase))
                 {
                     //puede cambiar algunos datos
                     user.StartHolidays = userToUpdateData.StartHolidays;
@@ -382,7 +484,7 @@ namespace BancDelTemps.ApiRest.Controllers
                         if (user.IsAdmin)
                         {
                             //puede cambiarlos todos
-                            
+
                             result = await UpdateDataUser(userToUpdate, userToUpdateData);
                         }
                         else
@@ -392,14 +494,14 @@ namespace BancDelTemps.ApiRest.Controllers
                     }
                     else
                     {
-                        
-                        
+
+
                         //puede cambiarlos todos
                         result = await UpdateDataUser(userToUpdate, userToUpdateData);
                     }
-               
+
                 }
-                 
+
                 else
                 {
                     result = Unauthorized();
@@ -412,12 +514,16 @@ namespace BancDelTemps.ApiRest.Controllers
 
         private async Task<IActionResult> UpdateDataUser(User userToUpdate, UserDTO userToUpdateData)
         {
-            IActionResult result=Ok();
+            IActionResult result = Ok();
             if (!Equals(userToUpdateData.NewEmail, default) && !Equals(userToUpdateData.NewEmail, userToUpdateData.Email))
             {
                 if (Equals(Context.GetUserPermiso(userToUpdateData.NewEmail), default))
                 {
-                    userToUpdate.Email = userToUpdateData.NewEmail;
+                    if (ValidateEmail(userToUpdateData.NewEmail))
+                    {
+                        userToUpdate.Email = userToUpdateData.NewEmail.ToLower();
+                    }
+                    else result = BadRequest($"El email '{userToUpdateData.NewEmail}' no está bien formado!");
                 }
                 else
                 {
@@ -442,8 +548,15 @@ namespace BancDelTemps.ApiRest.Controllers
                 Context.Users.Update(userToUpdate);
                 await Context.SaveChangesAsync();
             }
-            
+
             return result;
+        }
+
+        public static bool ValidateEmail(string emailToValidate)
+        {
+            //se asegura que el email esté bien formado 
+            const string VALIDATEEMAILPATTERN = @"^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$";
+            return System.Text.RegularExpressions.Regex.IsMatch(emailToValidate, VALIDATEEMAILPATTERN);
         }
     }
 }
