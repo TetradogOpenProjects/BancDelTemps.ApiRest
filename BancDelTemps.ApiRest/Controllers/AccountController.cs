@@ -19,10 +19,10 @@ namespace BancDelTemps.ApiRest.Controllers
     [ApiController]
     public class AccountController : Controller
     {
-        public static string[] AccountEmailServerValid =>new string[] { 
-                                                                        "gmail.com", 
+        public static string[] AccountEmailServerValid => new string[] {
+                                                                        "gmail.com",
                                                                         "googlemail.com"
-                                                                      };                                                              
+                                                                      };
         Context Context { get; set; }
         IConfiguration Configuration { get; set; }
         public IHttpContext ContextoHttp { get; set; }
@@ -41,12 +41,15 @@ namespace BancDelTemps.ApiRest.Controllers
             User user;
             if (ContextoHttp.IsAuthenticated)
             {
+
                 user = Context.GetFullUser(Models.User.GetEmailFromHttpContext(ContextoHttp));
                 result = Ok(new UserDTO(user));
+
             }
             else result = Forbid();
             return result;
         }
+
         [HttpGet("All")]
         [Authorize]
         public IActionResult GetAllUsers()
@@ -65,24 +68,24 @@ namespace BancDelTemps.ApiRest.Controllers
                 if (user.CanListUser)
                 {
                     result = Ok(Context.GetUsersPermisosWithTransacciones()
-                                        .Where      (u =>u.ValidatedRegister && u.LastUpdate.Ticks > ticksUTCLastTime)
-                                        .OrderBy    (u => u.LastUpdate)
-                                        .Select     (u => new UserDTO(u))
+                                        .Where(u => u.ValidatedRegister && u.LastUpdate.Ticks > ticksUTCLastTime)
+                                        .OrderBy(u => u.LastUpdate)
+                                        .Select(u => new UserDTO(u))
                                 );
                 }
                 else if (user.IsValidated)
                 {
-                    result = Ok(Context.Users.Where     (u => u.IsValidated && u.LastUpdate.Ticks > ticksUTCLastTime)
-                                             .OrderBy   (u => u.LastUpdate)
-                                             .Select    (u => new UserBasicDTO(u))
+                    result = Ok(Context.Users.Where(u => u.IsValidated && u.LastUpdate.Ticks > ticksUTCLastTime)
+                                             .OrderBy(u => u.LastUpdate)
+                                             .Select(u => new UserBasicDTO(u))
                                );
                 }
                 else
                 {//así pueden ponerse en contacto con los responsables de la validación
-                    result = Ok(Context.Users.Include   (u => u.Permisos)
-                                             .Where     (u => u.PermisosActivosName.Any(p=>Equals(p,Permiso.MODVALIDATION) || Equals(p, Permiso.ADMIN)))
-                                             .OrderBy   (u => u.LastUpdate)
-                                             .Select    (u => new UserBasicDTO(u))
+                    result = Ok(Context.Users.Include(u => u.Permisos)
+                                             .Where(u => u.PermisosActivosName.Any(p => Equals(p, Permiso.MODVALIDATION) || Equals(p, Permiso.ADMIN)))
+                                             .OrderBy(u => u.LastUpdate)
+                                             .Select(u => new UserBasicDTO(u))
                                );
                 }
             }
@@ -90,6 +93,125 @@ namespace BancDelTemps.ApiRest.Controllers
             return result;
         }
 
+        //gestionar todo lo que se puede configurar de un usuario
+        [HttpPut]
+        [Authorize]
+        public async Task<IActionResult> UpdateUser(UserDTO userToUpdateData)
+        {
+            IActionResult result;
+            User user, userToUpdate;
+            if (ContextoHttp.IsAuthenticated)
+            {
+                if (!Equals(userToUpdateData, default))
+                {
+                    user = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(ContextoHttp));
+                    if (string.Equals(userToUpdateData.Email, user.Email, StringComparison.OrdinalIgnoreCase))
+                    {
+                        //puede cambiar algunos datos
+                        user.StartHolidays = userToUpdateData.StartHolidays;
+                        user.EndHolidays = userToUpdateData.EndHolidays;
+
+                        user.LastUpdateDate = DateTime.Now;
+                        Context.Users.Update(user);
+                        await Context.SaveChangesAsync();
+                        result = Ok();
+                    }
+                    else if (user.IsModUser)
+                    {
+                        userToUpdate = Context.GetUserPermiso(userToUpdateData.Email);
+                        if (Equals(userToUpdate, default))
+                        {
+                            result = NotFound();
+                        }
+                        else if (userToUpdate.PermisosActivos.Any())
+                        {
+                            //only admin can edit
+                            if (user.IsAdmin)
+                            {
+                                //puede cambiarlos todos
+
+                                result = await UpdateDataUser(userToUpdate, userToUpdateData);
+                            }
+                            else
+                            {
+                                result = Unauthorized();
+                            }
+                        }
+                        else
+                        {
+
+
+                            //puede cambiarlos todos
+                            result = await UpdateDataUser(userToUpdate, userToUpdateData);
+                        }
+
+                    }
+                    else
+                    {
+                        result = Unauthorized();
+                    }
+                }
+                else result = BadRequest();
+
+            }
+            else result = Forbid();
+            return result;
+        }
+
+        private async Task<IActionResult> UpdateDataUser(User userToUpdate, UserDTO userToUpdateData)
+        {
+            IActionResult result = Ok();
+            if (!Equals(userToUpdateData.NewEmail, default) && !Equals(userToUpdateData.NewEmail, userToUpdateData.Email))
+            {
+                if (Equals(Context.GetUserPermiso(userToUpdateData.NewEmail), default))
+                {
+                    if (ValidateEmail(userToUpdateData.NewEmail))
+                    {
+                        userToUpdate.Email = userToUpdateData.NewEmail.ToLower();
+                    }
+                    else result = BadRequest($"El email '{userToUpdateData.NewEmail}' no está bien formado o no es de un servidor valido!");
+                }
+                else
+                {
+                    result = Conflict($"El email '{userToUpdateData.NewEmail}' ya está en uso");
+                }
+            }
+            if (result is OkResult)
+            {
+                if (!Equals(userToUpdateData.Name, default))
+                {
+                    userToUpdate.Name = userToUpdateData.Name;
+                }
+                if (!Equals(userToUpdateData.Surname, default))
+                {
+                    userToUpdate.Surname = userToUpdateData.Surname;
+                }
+                userToUpdate.StartHolidays = userToUpdateData.StartHolidays;
+                userToUpdate.EndHolidays = userToUpdateData.EndHolidays;
+                userToUpdate.JoinDate = userToUpdateData.JoinDate;
+
+                userToUpdate.LastUpdateDate = DateTime.Now;
+                Context.Users.Update(userToUpdate);
+                await Context.SaveChangesAsync();
+            }
+
+            return result;
+        }
+
+        public static bool ValidateEmail(string emailToValidate)
+        {
+            //se asegura que el email esté bien formado 
+            const string VALIDATEEMAILPATTERN = @"^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$";
+
+            string server;
+            bool isValid = !string.IsNullOrEmpty(emailToValidate) && System.Text.RegularExpressions.Regex.IsMatch(emailToValidate, VALIDATEEMAILPATTERN);
+            if (isValid)
+            {
+                server = emailToValidate.Split('@')[1];
+                isValid = AccountEmailServerValid.Any(s => string.Equals(s, server, StringComparison.OrdinalIgnoreCase));
+            }
+            return isValid;
+        }
 
         [HttpGet("Permisos/All")]
         [Authorize]
@@ -204,7 +326,7 @@ namespace BancDelTemps.ApiRest.Controllers
                     result = Ok();
                 }
                 else result = Unauthorized();
-             
+
 
 
 
@@ -224,7 +346,7 @@ namespace BancDelTemps.ApiRest.Controllers
                 user = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(ContextoHttp));
                 if (user.IsModUser)
                 {
-                    userToRemove =await Context.Users.Where(u => Equals(u.Id, userId)).FirstOrDefaultAsync();
+                    userToRemove = await Context.Users.Where(u => Equals(u.Id, userId)).FirstOrDefaultAsync();
                     if (!Equals(userToRemove, default))
                     {
                         Context.Users.Remove(userToRemove);
@@ -254,7 +376,7 @@ namespace BancDelTemps.ApiRest.Controllers
                     users = await Context.Users.Where(u => !u.ValidatedRegister && !u.HasTimeToUnregister).ToArrayAsync();
                     Context.Users.RemoveRange(users);
                     await Context.SaveChangesAsync();
-                    result = Ok(users.Select(u=>new UserBasicDTO(u)));
+                    result = Ok(users.Select(u => new UserBasicDTO(u)));
                 }
                 else result = Unauthorized();
             }
@@ -472,124 +594,5 @@ namespace BancDelTemps.ApiRest.Controllers
         }
 
 
-        //gestionar todo lo que se puede configurar de un usuario
-        [HttpPut]
-        [Authorize]
-        public async Task<IActionResult> UpdateUser(UserDTO userToUpdateData)
-        {
-            IActionResult result;
-            User user, userToUpdate;
-            if (ContextoHttp.IsAuthenticated)
-            {
-                if (!Equals(userToUpdateData, default))
-                {
-                    user = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(ContextoHttp));
-                    if (string.Equals(userToUpdateData.Email, user.Email, StringComparison.OrdinalIgnoreCase))
-                    {
-                        //puede cambiar algunos datos
-                        user.StartHolidays = userToUpdateData.StartHolidays;
-                        user.EndHolidays = userToUpdateData.EndHolidays;
-
-                        user.LastUpdateDate = DateTime.Now;
-                        Context.Users.Update(user);
-                        await Context.SaveChangesAsync();
-                        result = Ok();
-                    }
-                    else if (user.IsModUser)
-                    {
-                        userToUpdate = Context.GetFullUser(userToUpdateData.Email);
-                        if (Equals(userToUpdate, default))
-                        {
-                            result = NotFound();
-                        }
-                        else if (userToUpdate.PermisosActivos.Any())
-                        {
-                            //only admin can edit
-                            if (user.IsAdmin)
-                            {
-                                //puede cambiarlos todos
-
-                                result = await UpdateDataUser(userToUpdate, userToUpdateData);
-                            }
-                            else
-                            {
-                                result = Unauthorized();
-                            }
-                        }
-                        else
-                        {
-
-
-                            //puede cambiarlos todos
-                            result = await UpdateDataUser(userToUpdate, userToUpdateData);
-                        }
-
-                    }
-                    else
-                    {
-                        result = Unauthorized();
-                    }
-                }
-                else result = BadRequest();
-
-            }
-            else result = Forbid();
-            return result;
-        }
-
-        private async Task<IActionResult> UpdateDataUser(User userToUpdate, UserDTO userToUpdateData)
-        {
-            IActionResult result = Ok();
-            if (!Equals(userToUpdateData.NewEmail, default) && !Equals(userToUpdateData.NewEmail, userToUpdateData.Email))
-            {
-                if (Equals(Context.GetUserPermiso(userToUpdateData.NewEmail), default))
-                {
-                    if (ValidateEmail(userToUpdateData.NewEmail))
-                    {
-                        userToUpdate.Email = userToUpdateData.NewEmail.ToLower();
-                    }
-                    else result = BadRequest($"El email '{userToUpdateData.NewEmail}' no está bien formado o no es de un servidor valido!");
-                }
-                else
-                {
-                    result = Conflict($"El email '{userToUpdateData.NewEmail}' ya está en uso");
-                }
-            }
-            if (result is OkResult)
-            {
-                if (!Equals(userToUpdateData.Name, default))
-                {
-                    userToUpdate.Name = userToUpdateData.Name;
-                }
-                if (!Equals(userToUpdateData.Surname, default))
-                {
-                    userToUpdate.Surname = userToUpdateData.Surname;
-                }
-                userToUpdate.StartHolidays = userToUpdateData.StartHolidays;
-                userToUpdate.EndHolidays = userToUpdateData.EndHolidays;
-                userToUpdate.JoinDate = userToUpdateData.JoinDate;
-
-                userToUpdate.LastUpdateDate = DateTime.Now;
-                Context.Users.Update(userToUpdate);
-                await Context.SaveChangesAsync();
-            }
-
-            return result;
-        }
-
-        public static bool ValidateEmail(string emailToValidate)
-        {
-            //se asegura que el email esté bien formado 
-            const string VALIDATEEMAILPATTERN = @"^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$";
-            
-            string server;
-            bool isValid=!string.IsNullOrEmpty(emailToValidate) && System.Text.RegularExpressions.Regex.IsMatch(emailToValidate, VALIDATEEMAILPATTERN);
-            if (isValid)
-            {
-                server = emailToValidate.Split('@')[1];
-                isValid = AccountEmailServerValid.Any(s => string.Equals(s, server, StringComparison.OrdinalIgnoreCase));
-            }
-            return isValid;
-        }
     }
 }

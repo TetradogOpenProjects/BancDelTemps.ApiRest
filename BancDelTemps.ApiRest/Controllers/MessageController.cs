@@ -61,7 +61,7 @@ namespace BancDelTemps.ApiRest.Controllers
             if (ContextoHttp.IsAuthenticated)
             {
                 user = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(ContextoHttp));
-                message = Context.Messages.Where(m => Equals(m.Id, idMessage)).FirstOrDefault();
+                message = await Context.Messages.Where(m => Equals(m.Id, idMessage)).FirstOrDefaultAsync();
                 if (!Equals(message, default))
                 {
                     if (!message.IsHiddenFrom || !message.IsHiddenTo)
@@ -126,7 +126,7 @@ namespace BancDelTemps.ApiRest.Controllers
             if (ContextoHttp.IsAuthenticated)
             {
                 user = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(ContextoHttp));
-                lastMessage = Context.Messages.Where(m => Equals(m.Id, idMessageLast)).FirstOrDefault();
+                lastMessage = await Context.Messages.Where(m => Equals(m.Id, idMessageLast)).FirstOrDefaultAsync();
                 if (!Equals(lastMessage, default))
                 {
 
@@ -182,7 +182,7 @@ namespace BancDelTemps.ApiRest.Controllers
             if (ContextoHttp.IsAuthenticated)
             {
                 user = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(ContextoHttp));
-                message = Context.Messages.Where(m => Equals(m.Id, idMessage)).FirstOrDefault();
+                message = await Context.Messages.Where(m => Equals(m.Id, idMessage)).FirstOrDefaultAsync();
                 if (!Equals(message, default))
                 {
                     if (Equals(user.Id, message.FromId))
@@ -218,7 +218,7 @@ namespace BancDelTemps.ApiRest.Controllers
             if (ContextoHttp.IsAuthenticated)
             {
                 user = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(ContextoHttp));
-                message = Context.Messages.Where(m => Equals(m.Id, idMessage)).FirstOrDefault();
+                message =await Context.Messages.Where(m => Equals(m.Id, idMessage)).FirstOrDefaultAsync();
                 if (!Equals(message, default))
                 {
                     if (Equals(user.Id, message.ToId))
@@ -254,10 +254,10 @@ namespace BancDelTemps.ApiRest.Controllers
             if (ContextoHttp.IsAuthenticated)
             {
                 user = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(ContextoHttp));
-                message = Context.Messages.Where(m => Equals(m.Id, idMessage)).FirstOrDefault();
+                message = await Context.Messages.Where(m => Equals(m.Id, idMessage)).FirstOrDefaultAsync();
                 if (!Equals(message, default))
                 {
-                    if (Equals(user.Id, message.ToId))
+                    if (Equals(user.Id, message.ToId) || user.IsModMessages)
                     {
 
                         result = Ok(message.DateRevised.HasValue);

@@ -9,6 +9,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading;
 using Microsoft.Extensions.Primitives;
+using System.Threading.Tasks;
 
 namespace BancDelTemps.ApiRest.Testing
 {
@@ -57,10 +58,12 @@ namespace BancDelTemps.ApiRest.Testing
             throw new NotImplementedException();
         }
     }
-    public delegate void TestUserMethod(User user);
+    public delegate Task TestUserMethod(User user);
+    public delegate Task TestModMethod(User mod, User user);
     public abstract class TestBase
     {
         private const string DEFAULT = "server=localhost;port=3306;user id=root;password=root;database=BancDelTempsBD";
+        public static Random Seed { get; set; } = new Random();
         public TestBase()
         {
             DbContextOptionsBuilder<Context> optionsBilder = new DbContextOptionsBuilder<Context>();
@@ -75,7 +78,7 @@ namespace BancDelTemps.ApiRest.Testing
         public Configuration Configuration { get; private set; }
         public Context Context { get; private set; }
 
-        public User GetNoValidatedUser()
+        public User GetNoValidatedUser(bool isRegitered=false)
         {
             const string EMAIL = "Invalidated@email";
             User userNotValidated = Context.Users.Where(u => u.Email.Equals(EMAIL)).FirstOrDefault();
@@ -88,6 +91,8 @@ namespace BancDelTemps.ApiRest.Testing
                     Email = EMAIL,
                     JoinDate = DateTime.UtcNow
                 };
+                userNotValidated.ValidatedRegister = isRegitered;
+
                 Context.Users.Add(userNotValidated);
                 Context.SaveChanges();
             }
@@ -110,7 +115,8 @@ namespace BancDelTemps.ApiRest.Testing
                     Name = "Validated",
                     Surname = "apellido",
                     Email = EMAIL,
-                    JoinDate = DateTime.UtcNow
+                    JoinDate = DateTime.UtcNow,
+                    ValidatedRegister=true
                 };
                 Context.Users.Add(userValidated);
                 Context.SaveChanges();
@@ -132,7 +138,8 @@ namespace BancDelTemps.ApiRest.Testing
                     Name = email.Split('@')[0],
                     Surname = "apellido",
                     Email = email,
-                    JoinDate = DateTime.UtcNow
+                    JoinDate = DateTime.UtcNow,
+                    ValidatedRegister=true
                 };
 
                 Context.Users.Add(superUser);
@@ -148,12 +155,23 @@ namespace BancDelTemps.ApiRest.Testing
 
         public void DoAction(User user, TestUserMethod method)
         {
+            
+            UpdateContextUser(user);
+            method(user);
 
+        }
+        public void DoAction(User mod, User user, TestModMethod method)
+        {
+
+            UpdateContextUser(mod);
+            method(mod, user);
+
+        }
+        public void UpdateContextUser(User user)
+        {
             ContextoHttp.IsAuthenticated = !Equals(user, default);
             if (ContextoHttp.IsAuthenticated)
                 ContextoHttp.Claims = new string[] { string.Empty, string.Empty, string.Empty, string.Empty, user.Email };
-            method(user);
-
         }
     }
 }

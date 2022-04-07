@@ -28,7 +28,16 @@ namespace BancDelTemps.ApiRest.Models
             Granted = new List<UserPermiso>();
             Revoked = new List<UserPermiso>();
             Validated = new List<User>();
-        
+            MessageTo = new List<Message>();
+            MessageFrom = new List<Message>();
+            MessageRevised = new List<Message>();
+            OperacionesHechas = new List<Operacion>();
+            OperacionesRevisadas = new List<Operacion>();
+            TransaccionesFrom = new List<Transaccion>();
+            TransaccionesIn = new List<Transaccion>();
+            TransaccionesSigned = new List<TransaccionDelegada>();
+            TransaccionesValidator = new List<Transaccion>();
+
         }
         public User([NotNull] ClaimsPrincipal principal) : this()
         {
@@ -117,7 +126,7 @@ namespace BancDelTemps.ApiRest.Models
         public ICollection<Transaccion> TransaccionesValidator { get; set; }
 
         public ICollection<Operacion> OperacionesHechas { get; set; }
-        public ICollection<Operacion> OpereacionesRevisadas { get; set; }
+        public ICollection<Operacion> OperacionesRevisadas { get; set; }
 
         [NotMapped]
         public int TotalMinutos =>INITTIME + TransaccionesIn.Sum(t => t.Minutos) - TransaccionesFrom.Sum(t => t.Minutos);
@@ -165,21 +174,21 @@ namespace BancDelTemps.ApiRest.Models
     public class UserDTO//no hay herencia con el Basic porque luego da problemas NetCore
     {
         public UserDTO() { }
-        public UserDTO([NotNull]User user)
+        public UserDTO([NotNull] User userWithTransaccions)
         {
-            Id = user.Id;
-            Name = user.Name;
-            Surname = user.Surname;
-            IsValidated = user.IsValidated;
-            IsOnHoliDays = user.IsOnHolidays;
-            StartHolidays = user.StartHolidays;
-            EndHolidays = user.EndHolidays;
-            Email = user.Email;
-            JoinDate = user.JoinDate;
-            Permisos = user.PermisosActivosName;
-            TotalMinutos = user.TotalMinutos;
-            TotalMinutosFromPorValidar=user.TotalMinutosFromPorValidar;
-            TotalMinutosInPorValidar=user.TotalMinutosInPorValidar;
+            Id = userWithTransaccions.Id;
+            Name = userWithTransaccions.Name;
+            Surname = userWithTransaccions.Surname;
+            IsValidated = userWithTransaccions.IsValidated;
+            IsOnHoliDays = userWithTransaccions.IsOnHolidays;
+            StartHolidays = userWithTransaccions.StartHolidays;
+            EndHolidays = userWithTransaccions.EndHolidays;
+            Email = userWithTransaccions.Email;
+            JoinDate = userWithTransaccions.JoinDate;
+            Permisos = userWithTransaccions.PermisosActivosName;
+            TotalMinutos = userWithTransaccions.TotalMinutos;
+            TotalMinutosFromPorValidar= userWithTransaccions.TotalMinutosFromPorValidar;
+            TotalMinutosInPorValidar= userWithTransaccions.TotalMinutosInPorValidar;
         }
         public long Id { get; set; }
         public string Name { get; set; }

@@ -37,7 +37,7 @@ namespace BancDelTemps.ApiRest
             modelBuilder.Entity<User>().HasMany(u => u.TransaccionesSigned).WithOne(up => up.User);
             modelBuilder.Entity<User>().HasMany(u => u.TransaccionesValidator).WithOne(up => up.UserValidator);
             modelBuilder.Entity<User>().HasMany(u => u.OperacionesHechas).WithOne(o => o.User);
-            modelBuilder.Entity<User>().HasMany(u => u.OpereacionesRevisadas).WithOne(o => o.Revisor);
+            modelBuilder.Entity<User>().HasMany(u => u.OperacionesRevisadas).WithOne(o => o.Revisor);
 
             modelBuilder.Entity<User>().HasMany(u => u.MessageFrom).WithOne(up => up.From);
             modelBuilder.Entity<User>().HasMany(u => u.MessageTo).WithOne(up => up.To);
@@ -53,7 +53,7 @@ namespace BancDelTemps.ApiRest
             modelBuilder.Entity<User>().Navigation(u => u.TransaccionesSigned).UsePropertyAccessMode(PropertyAccessMode.Property);
             modelBuilder.Entity<User>().Navigation(u => u.TransaccionesValidator).UsePropertyAccessMode(PropertyAccessMode.Property);
             modelBuilder.Entity<User>().Navigation(u => u.OperacionesHechas).UsePropertyAccessMode(PropertyAccessMode.Property);
-            modelBuilder.Entity<User>().Navigation(u => u.OpereacionesRevisadas).UsePropertyAccessMode(PropertyAccessMode.Property);
+            modelBuilder.Entity<User>().Navigation(u => u.OperacionesRevisadas).UsePropertyAccessMode(PropertyAccessMode.Property);
             #endregion
             #region Messages
             modelBuilder.Entity<Message>().Navigation(m => m.From).UsePropertyAccessMode(PropertyAccessMode.Property);
