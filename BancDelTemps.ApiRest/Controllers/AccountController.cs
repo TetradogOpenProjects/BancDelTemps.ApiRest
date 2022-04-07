@@ -78,8 +78,12 @@ namespace BancDelTemps.ApiRest.Controllers
                                );
                 }
                 else
-                {
-                    result = Unauthorized();
+                {//así pueden ponerse en contacto con los responsables de la validación
+                    result = Ok(Context.Users.Include   (u => u.Permisos)
+                                             .Where     (u => u.PermisosActivosName.Any(p=>Equals(p,Permiso.MODVALIDATION) || Equals(p, Permiso.ADMIN)))
+                                             .OrderBy   (u => u.LastUpdate)
+                                             .Select    (u => new UserBasicDTO(u))
+                               );
                 }
             }
             else result = Forbid();
