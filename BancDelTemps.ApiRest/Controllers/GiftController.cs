@@ -84,7 +84,7 @@ namespace BancDelTemps.ApiRest.Controllers
                     if (user.Id == transaccionDTO.IdFrom || user.IsModGift)
                     {
    
-                        transaccion = await TransaccionesController.DoTransaccion(transaccionDTO);
+                        transaccion = await TransaccionesController.DoTransaccion(transaccionDTO, user.IsModGift && user.IsModTransaccion ? user : default);
                         if (!Equals(transaccion, default))
                         {
                             gift = new Gift()

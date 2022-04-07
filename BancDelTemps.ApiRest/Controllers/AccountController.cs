@@ -19,7 +19,10 @@ namespace BancDelTemps.ApiRest.Controllers
     [ApiController]
     public class AccountController : Controller
     {
-        public static string[] AccountEmailServerValid =>new string[] { "gmail", "googlemail" };
+        public static string[] AccountEmailServerValid =>new string[] { 
+                                                                        "gmail.com", 
+                                                                        "googlemail.com"
+                                                                      };                                                              
         Context Context { get; set; }
         IConfiguration Configuration { get; set; }
         public IHttpContext ContextoHttp { get; set; }
@@ -30,7 +33,7 @@ namespace BancDelTemps.ApiRest.Controllers
             ContextoHttp = new ContextoHttp(HttpContext);
         }
 
-        [HttpGet("")]
+        [HttpGet]
         [Authorize]
         public IActionResult GetUser()
         {
@@ -50,9 +53,9 @@ namespace BancDelTemps.ApiRest.Controllers
         {
             return GetAllUsers(0);
         }
-        [HttpGet("All/ticksUTCLastUser:long")]
+        [HttpGet("All/ticksUTCLastTime:long")]
         [Authorize]
-        public IActionResult GetAllUsers(long ticksUTCLastUser)
+        public IActionResult GetAllUsers(long ticksUTCLastTime)
         {//así no hay que dar todos los usuarios siempre
             IActionResult result;
             User user;
@@ -61,11 +64,18 @@ namespace BancDelTemps.ApiRest.Controllers
                 user = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(ContextoHttp));
                 if (user.CanListUser)
                 {
-                    result = Ok(Context.GetUsersPermisosWithTransacciones().Where(u =>u.ValidatedRegister && u.LastUpdate.Ticks > ticksUTCLastUser).OrderBy(u => u.LastUpdate).Select(u => new UserDTO(u)));
+                    result = Ok(Context.GetUsersPermisosWithTransacciones()
+                                        .Where      (u =>u.ValidatedRegister && u.LastUpdate.Ticks > ticksUTCLastTime)
+                                        .OrderBy    (u => u.LastUpdate)
+                                        .Select     (u => new UserDTO(u))
+                                );
                 }
                 else if (user.IsValidated)
                 {
-                    result = Ok(Context.Users.Where(u => u.IsValidated && u.LastUpdate.Ticks > ticksUTCLastUser).OrderBy(u => u.LastUpdate).Select(u => new UserBasicDTO(u)));
+                    result = Ok(Context.Users.Where     (u => u.IsValidated && u.LastUpdate.Ticks > ticksUTCLastTime)
+                                             .OrderBy   (u => u.LastUpdate)
+                                             .Select    (u => new UserBasicDTO(u))
+                               );
                 }
                 else
                 {
@@ -215,7 +225,7 @@ namespace BancDelTemps.ApiRest.Controllers
                     {
                         Context.Users.Remove(userToRemove);
                         await Context.SaveChangesAsync();
-                        result = Ok();
+                        result = Ok(new UserBasicDTO(userToRemove));
                     }
                     else result = NotFound();
                 }
@@ -237,7 +247,7 @@ namespace BancDelTemps.ApiRest.Controllers
                 admin = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(ContextoHttp));
                 if (admin.IsAdmin)
                 {
-                    users = await Context.Users.Where(u => !u.ValidatedRegister && !u.HasTimeToRegister).ToArrayAsync();
+                    users = await Context.Users.Where(u => !u.ValidatedRegister && !u.HasTimeToUnregister).ToArrayAsync();
                     Context.Users.RemoveRange(users);
                     await Context.SaveChangesAsync();
                     result = Ok(users.Select(u=>new UserBasicDTO(u)));
@@ -523,7 +533,7 @@ namespace BancDelTemps.ApiRest.Controllers
                     {
                         userToUpdate.Email = userToUpdateData.NewEmail.ToLower();
                     }
-                    else result = BadRequest($"El email '{userToUpdateData.NewEmail}' no está bien formado!");
+                    else result = BadRequest($"El email '{userToUpdateData.NewEmail}' no está bien formado o no es de un servidor valido!");
                 }
                 else
                 {
@@ -556,11 +566,12 @@ namespace BancDelTemps.ApiRest.Controllers
         {
             //se asegura que el email esté bien formado 
             const string VALIDATEEMAILPATTERN = @"^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$";
+            
             string server;
             bool isValid= System.Text.RegularExpressions.Regex.IsMatch(emailToValidate, VALIDATEEMAILPATTERN);
             if (isValid)
             {
-                server = emailToValidate.Split('@')[1].Split('.')[0];
+                server = emailToValidate.Split('@')[1];
                 isValid = AccountEmailServerValid.Any(s => string.Equals(s, server, StringComparison.OrdinalIgnoreCase));
             }
             return isValid;

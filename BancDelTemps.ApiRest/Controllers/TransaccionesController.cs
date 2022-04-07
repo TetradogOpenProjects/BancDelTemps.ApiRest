@@ -1,12 +1,10 @@
 ﻿using BancDelTemps.ApiRest.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Net;
 using System.Threading.Tasks;
 
 namespace BancDelTemps.ApiRest.Controllers
@@ -242,7 +240,7 @@ namespace BancDelTemps.ApiRest.Controllers
             if (autoritzed)
             {
 
-                transaccionDTO.Id = (await DoTransaccion(transaccionDTO,operacion,user)).Id;
+                transaccionDTO.Id = (await DoTransaccion(transaccionDTO, operacion: operacion, userFrom: user)).Id;
                 result = Ok(transaccionDTO);
             }
 
@@ -255,7 +253,7 @@ namespace BancDelTemps.ApiRest.Controllers
             }
             return result;
         }
-        internal async Task<Transaccion> DoTransaccion([NotNull] TransaccionDTO transaccionDTO, Operacion operacion = default, User userFrom = default, User mod = default)
+        internal async Task<Transaccion> DoTransaccion([NotNull] TransaccionDTO transaccionDTO, User mod = default, Operacion operacion = default, User userFrom = default)
         {
             Transaccion transaccion=default;
 

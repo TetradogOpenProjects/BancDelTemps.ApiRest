@@ -54,9 +54,9 @@ namespace BancDelTemps.ApiRest.Models
         public DateTime LastUpdate => LastUpdateDate.HasValue ? LastUpdateDate.Value : JoinDate;
 
         [NotMapped]
-        public bool CanSelfUnregister =>!ValidatedRegister && !IsValidated && HasTimeToRegister;
+        public bool CanSelfUnregister =>!ValidatedRegister && !IsValidated && HasTimeToUnregister;
         [NotMapped]
-        public bool HasTimeToRegister=> JoinDate > DateTime.UtcNow.Add(-SelfUnresiterTime);
+        public bool HasTimeToUnregister=> JoinDate > DateTime.UtcNow.Add(-SelfUnresiterTime);
 
         [Required,MaxLength(50)]
         public string Name { get; set; }
@@ -75,7 +75,17 @@ namespace BancDelTemps.ApiRest.Models
         [NotMapped]
         public bool IsOnHolidays => StartHolidays.HasValue && DateTime.UtcNow > StartHolidays.Value && (!EndHolidays.HasValue || DateTime.UtcNow < EndHolidays.Value);
 
+        public ICollection<Message> MessageTo { get; set; }
+        [NotMapped]
+        public IEnumerable<Message> MessageToVisible => MessageTo.Where(m => !m.IsHiddenTo);
+        public ICollection<Message> MessageFrom { get; set; }
+        [NotMapped]
+        public IEnumerable<Message> MessageFromVisible => MessageFrom.Where(m => !m.IsHiddenFrom);
+
+        public ICollection<Message> MessageRevised { get; set; }
+
         public ICollection<UserPermiso> Permisos { get; set; }
+        
 
         [NotMapped]
         public IEnumerable<UserPermiso> PermisosActivos => Permisos.Where(p => p.IsActive);
@@ -98,6 +108,8 @@ namespace BancDelTemps.ApiRest.Models
         public bool IsModOperacion => IsAdmin || PermisosActivosName.Any(p => Permiso.MODOPERACION.Equals(p));
         [NotMapped]
         public bool IsModUser => IsAdmin || PermisosActivosName.Any(p => Permiso.MODUSER.Equals(p));
+        [NotMapped]
+        public bool IsModMessages => IsAdmin || PermisosActivosName.Any(p => Permiso.MODMESSAGES.Equals(p));
         public ICollection<Transaccion> TransaccionesFrom { get; set; }
         public ICollection<Transaccion> TransaccionesIn { get; set; }
         public ICollection<TransaccionDelegada> TransaccionesSigned { get; set; }

@@ -50,6 +50,16 @@ namespace BancDelTemps.ApiRest.Testing
         {
             DoAction(default, GetUserInfo);
         }
+
+        private void GetUserInfo(User user)
+        {
+            IActionResult result = Controller.GetUser();
+            if (!Equals(user, default))
+                Assert.IsType<OkObjectResult>(result);
+            else Assert.IsType<ForbidResult>(result);
+        }
+        #endregion
+        #region Test Validar Cambio Email
         [Theory]
         [InlineData("gabriel.cat.developer@gmail.com")]
         [InlineData("tetradog@gmail.com")]
@@ -64,13 +74,6 @@ namespace BancDelTemps.ApiRest.Testing
         public void ValidationEmailIsFalse(string email)
         {
             Assert.False(AccountController.ValidateEmail(email));
-        }
-        private void GetUserInfo(User user)
-        {
-            IActionResult result = Controller.GetUser();
-            if (!Equals(user, default))
-                Assert.IsType<OkObjectResult>(result);
-            else Assert.IsType<ForbidResult>(result);
         }
         #endregion
     }

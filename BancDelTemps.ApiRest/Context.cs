@@ -16,6 +16,7 @@ namespace BancDelTemps.ApiRest
         protected Context() : base() { }
 
         public DbSet<User> Users { get; set; }
+        public DbSet<Message> Messages { get; set; }
         public DbSet<Permiso> Permisos { get; set; }
         public DbSet<UserPermiso> PermisosUsuarios { get; set; }
         public DbSet<Transaccion> Transacciones { get; set; }
@@ -38,6 +39,10 @@ namespace BancDelTemps.ApiRest
             modelBuilder.Entity<User>().HasMany(u => u.OperacionesHechas).WithOne(o => o.User);
             modelBuilder.Entity<User>().HasMany(u => u.OpereacionesRevisadas).WithOne(o => o.Revisor);
 
+            modelBuilder.Entity<User>().HasMany(u => u.MessageFrom).WithOne(up => up.From);
+            modelBuilder.Entity<User>().HasMany(u => u.MessageTo).WithOne(up => up.To);
+            modelBuilder.Entity<User>().HasMany(u => u.MessageRevised).WithOne(up => up.Revisor);
+
             modelBuilder.Entity<User>().Navigation(u => u.Granted).UsePropertyAccessMode(PropertyAccessMode.Property);
             modelBuilder.Entity<User>().Navigation(u => u.Revoked).UsePropertyAccessMode(PropertyAccessMode.Property);
             modelBuilder.Entity<User>().Navigation(u => u.Permisos).UsePropertyAccessMode(PropertyAccessMode.Property);
@@ -49,6 +54,11 @@ namespace BancDelTemps.ApiRest
             modelBuilder.Entity<User>().Navigation(u => u.TransaccionesValidator).UsePropertyAccessMode(PropertyAccessMode.Property);
             modelBuilder.Entity<User>().Navigation(u => u.OperacionesHechas).UsePropertyAccessMode(PropertyAccessMode.Property);
             modelBuilder.Entity<User>().Navigation(u => u.OpereacionesRevisadas).UsePropertyAccessMode(PropertyAccessMode.Property);
+            #endregion
+            #region Messages
+            modelBuilder.Entity<Message>().Navigation(m => m.From).UsePropertyAccessMode(PropertyAccessMode.Property);
+            modelBuilder.Entity<Message>().Navigation(m => m.To).UsePropertyAccessMode(PropertyAccessMode.Property);
+            modelBuilder.Entity<Message>().Navigation(m => m.Revisor).UsePropertyAccessMode(PropertyAccessMode.Property);
             #endregion
             #region Permisos
             modelBuilder.Entity<Permiso>().HasMany(u => u.Users).WithOne(up => up.Permiso);
@@ -91,10 +101,6 @@ namespace BancDelTemps.ApiRest
 
         }
         
-        private void SeedDataBase(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<Permiso>().HasData(Permiso.Todos.Select(p => new Permiso() { Nombre = p }));
-        }
 
         public User GetUserPermiso([NotNull] User user)
         {
