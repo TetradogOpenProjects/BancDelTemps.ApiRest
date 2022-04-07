@@ -22,6 +22,7 @@ namespace BancDelTemps.ApiRest.Models
         public const int INITTIME = 10 * 60;//10 horas
         public static TimeSpan DefaultExpireTokenTime { get; set; } = TimeSpan.FromDays(1);
         public static TimeSpan SelfUnresiterTime { get; set; } = TimeSpan.FromDays(1);
+        public static TimeSpan MinTimeWaitToSetValidated { get; set; } = TimeSpan.FromDays(7);
         public User() {
             Permisos = new List<UserPermiso>();
             Granted = new List<UserPermiso>();
