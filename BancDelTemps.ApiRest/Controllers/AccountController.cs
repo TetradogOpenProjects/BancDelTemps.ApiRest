@@ -276,59 +276,63 @@ namespace BancDelTemps.ApiRest.Controllers
 
             if (ContextoHttp.IsAuthenticated)
             {
-                userGranter = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(ContextoHttp));
-
-                if (userGranter.IsAdmin)
+                if (!Equals(permisoUserDTO, default))
                 {
-                    userToAdd = Context.GetUserPermiso(permisoUserDTO.EmailUser);
-                    if (!Equals(userToAdd, default))
+                    userGranter = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(ContextoHttp));
+
+                    if (userGranter.IsAdmin)
                     {
-                        if (userGranter.Id.Equals(userToAdd.Id))
+                        userToAdd = Context.GetUserPermiso(permisoUserDTO.EmailUser);
+                        if (!Equals(userToAdd, default))
                         {
-                            result = Unauthorized();//no se puede dar permisos a si mismo
-                        }
-                        else if (userToAdd.IsValidated)
-                        {
-                            permisosOk = new List<string>();
-                            for (int i = 0; i < permisoUserDTO.Permisos.Length; i++)
+                            if (userGranter.Id.Equals(userToAdd.Id))
                             {
-                                permisoLow = permisoUserDTO.Permisos[i].ToLower();
-                                permiso =await Context.Permisos.Where(p => p.Nombre.Equals(permisoLow)).FirstOrDefaultAsync();
-                                if (!Equals(permiso, default))
+                                result = Unauthorized();//no se puede dar permisos a si mismo
+                            }
+                            else if (userToAdd.IsValidated)
+                            {
+                                permisosOk = new List<string>();
+                                for (int i = 0; i < permisoUserDTO.Permisos.Length; i++)
                                 {
-                                    try
+                                    permisoLow = permisoUserDTO.Permisos[i].ToLower();
+                                    permiso = await Context.Permisos.Where(p => p.Nombre.Equals(permisoLow)).FirstOrDefaultAsync();
+                                    if (!Equals(permiso, default))
                                     {
-                                        userPermiso =await Context.PermisosUsuarios.Where(p => p.PermisoId.Equals(permiso.Id) && p.UserId.Equals(userToAdd.Id)).FirstOrDefaultAsync();
-                                        if (!Equals(userPermiso, default))
+                                        try
                                         {
-                                            if (!userPermiso.IsActive)
-                                            {//asi si no es necesario no pierde quien y cuando se dio por última vez. 
-                                                userPermiso.GrantedBy = userGranter;
-                                                userPermiso.GrantedDate = DateTime.UtcNow;
-                                                Context.PermisosUsuarios.Update(userPermiso);
+                                            userPermiso = await Context.PermisosUsuarios.Where(p => p.PermisoId.Equals(permiso.Id) && p.UserId.Equals(userToAdd.Id)).FirstOrDefaultAsync();
+                                            if (!Equals(userPermiso, default))
+                                            {
+                                                if (!userPermiso.IsActive)
+                                                {//asi si no es necesario no pierde quien y cuando se dio por última vez. 
+                                                    userPermiso.GrantedBy = userGranter;
+                                                    userPermiso.GrantedDate = DateTime.UtcNow;
+                                                    Context.PermisosUsuarios.Update(userPermiso);
+                                                }
                                             }
+                                            else
+                                            {
+                                                Context.PermisosUsuarios.Add(new UserPermiso(userGranter, userToAdd, permiso));
+                                            }
+                                            await Context.SaveChangesAsync();
+                                            permisosOk.Add(permisoUserDTO.Permisos[i]);
                                         }
-                                        else
-                                        {
-                                            Context.PermisosUsuarios.Add(new UserPermiso(userGranter, userToAdd, permiso));
-                                        }
-                                        await Context.SaveChangesAsync();
-                                        permisosOk.Add(permisoUserDTO.Permisos[i]);
+                                        catch { }
+
                                     }
-                                    catch { }
 
                                 }
-
+                                result = Ok(permisosOk);
                             }
-                            result = Ok(permisosOk);
+                            else result = Forbid();//el usuario aun no se ha validado!
+
                         }
-                        else result = Forbid();//el usuario aun no se ha validado!
+                        else result = NotFound();
 
                     }
-                    else result = NotFound();
-
+                    else result = Unauthorized();
                 }
-                else result = Unauthorized();
+                else result = BadRequest();
             }
             else result = Forbid();
 
@@ -349,56 +353,60 @@ namespace BancDelTemps.ApiRest.Controllers
 
             if (ContextoHttp.IsAuthenticated)
             {
-                userRevoker = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(ContextoHttp));
-
-                if (userRevoker.IsAdmin)
+                if (!Equals(permisoUserDTO, default))
                 {
-                    userToRemove = Context.GetUserPermiso(permisoUserDTO.EmailUser);
-                    if (!Equals(userToRemove, default))
+                    userRevoker = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(ContextoHttp));
+
+                    if (userRevoker.IsAdmin)
                     {
-                        if (userRevoker.Id.Equals(userToRemove.Id))
+                        userToRemove = Context.GetUserPermiso(permisoUserDTO.EmailUser);
+                        if (!Equals(userToRemove, default))
                         {
-                            result = Unauthorized();//no se puede quitar permisos a si mismo
-                        }
-                        else
-                        {
-                            permisosOk = new List<string>();
-                            for (int i = 0; i < permisoUserDTO.Permisos.Length; i++)
+                            if (userRevoker.Id.Equals(userToRemove.Id))
                             {
-                                permisoLow = permisoUserDTO.Permisos[i].ToLower();
-                                permiso =await  Context.Permisos.Where(p => p.Nombre.Equals(permisoLow)).FirstOrDefaultAsync();
-                                if (!Equals(permiso, default))
+                                result = Unauthorized();//no se puede quitar permisos a si mismo
+                            }
+                            else
+                            {
+                                permisosOk = new List<string>();
+                                for (int i = 0; i < permisoUserDTO.Permisos.Length; i++)
                                 {
-                                    userPermiso = await Context.PermisosUsuarios.Where(p => p.PermisoId.Equals(permiso.Id) && p.UserId.Equals(userToRemove.Id)).FirstOrDefaultAsync();
-                                    if (!Equals(userPermiso, default))
+                                    permisoLow = permisoUserDTO.Permisos[i].ToLower();
+                                    permiso = await Context.Permisos.Where(p => p.Nombre.Equals(permisoLow)).FirstOrDefaultAsync();
+                                    if (!Equals(permiso, default))
                                     {
-                                        try
+                                        userPermiso = await Context.PermisosUsuarios.Where(p => p.PermisoId.Equals(permiso.Id) && p.UserId.Equals(userToRemove.Id)).FirstOrDefaultAsync();
+                                        if (!Equals(userPermiso, default))
                                         {
-                                            if (userPermiso.IsActive)
+                                            try
                                             {
-                                                userPermiso.RevokedBy = userRevoker;
-                                                userPermiso.RevokedDate = DateTime.UtcNow;
-                                                Context.PermisosUsuarios.Update(userPermiso);
-                                                await Context.SaveChangesAsync();
+                                                if (userPermiso.IsActive)
+                                                {
+                                                    userPermiso.RevokedBy = userRevoker;
+                                                    userPermiso.RevokedDate = DateTime.UtcNow;
+                                                    Context.PermisosUsuarios.Update(userPermiso);
+                                                    await Context.SaveChangesAsync();
+                                                }
+                                                permisosOk.Add(permisoUserDTO.Permisos[i]);
                                             }
-                                            permisosOk.Add(permisoUserDTO.Permisos[i]);
+                                            catch { }
+
+
                                         }
-                                        catch { }
 
 
                                     }
 
-
                                 }
-
+                                result = Ok(permisosOk);
                             }
-                            result = Ok(permisosOk);
                         }
-                    }
-                    else result = NotFound();
+                        else result = NotFound();
 
+                    }
+                    else result = Unauthorized();
                 }
-                else result = Unauthorized();
+                else result = BadRequest();
             }
             else result = Forbid();
             return result;
@@ -473,53 +481,56 @@ namespace BancDelTemps.ApiRest.Controllers
             User user, userToUpdate;
             if (ContextoHttp.IsAuthenticated)
             {
-                user = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(ContextoHttp));
-                if (string.Equals(userToUpdateData.Email, user.Email, StringComparison.OrdinalIgnoreCase))
+                if (!Equals(userToUpdateData, default))
                 {
-                    //puede cambiar algunos datos
-                    user.StartHolidays = userToUpdateData.StartHolidays;
-                    user.EndHolidays = userToUpdateData.EndHolidays;
-
-                    user.LastUpdateDate = DateTime.Now;
-                    Context.Users.Update(user);
-                    await Context.SaveChangesAsync();
-                    result = Ok();
-                }
-                else if (user.IsModUser)
-                {
-                    userToUpdate = Context.GetFullUser(userToUpdateData.Email);
-                    if (Equals(userToUpdate, default))
+                    user = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(ContextoHttp));
+                    if (string.Equals(userToUpdateData.Email, user.Email, StringComparison.OrdinalIgnoreCase))
                     {
-                        result = NotFound();
+                        //puede cambiar algunos datos
+                        user.StartHolidays = userToUpdateData.StartHolidays;
+                        user.EndHolidays = userToUpdateData.EndHolidays;
+
+                        user.LastUpdateDate = DateTime.Now;
+                        Context.Users.Update(user);
+                        await Context.SaveChangesAsync();
+                        result = Ok();
                     }
-                    else if (userToUpdate.PermisosActivos.Any())
+                    else if (user.IsModUser)
                     {
-                        //only admin can edit
-                        if (user.IsAdmin)
+                        userToUpdate = Context.GetFullUser(userToUpdateData.Email);
+                        if (Equals(userToUpdate, default))
                         {
-                            //puede cambiarlos todos
+                            result = NotFound();
+                        }
+                        else if (userToUpdate.PermisosActivos.Any())
+                        {
+                            //only admin can edit
+                            if (user.IsAdmin)
+                            {
+                                //puede cambiarlos todos
 
-                            result = await UpdateDataUser(userToUpdate, userToUpdateData);
+                                result = await UpdateDataUser(userToUpdate, userToUpdateData);
+                            }
+                            else
+                            {
+                                result = Unauthorized();
+                            }
                         }
                         else
                         {
-                            result = Unauthorized();
+
+
+                            //puede cambiarlos todos
+                            result = await UpdateDataUser(userToUpdate, userToUpdateData);
                         }
+
                     }
                     else
                     {
-
-
-                        //puede cambiarlos todos
-                        result = await UpdateDataUser(userToUpdate, userToUpdateData);
+                        result = Unauthorized();
                     }
-
                 }
-
-                else
-                {
-                    result = Unauthorized();
-                }
+                else result = BadRequest();
 
             }
             else result = Forbid();
@@ -572,7 +583,7 @@ namespace BancDelTemps.ApiRest.Controllers
             const string VALIDATEEMAILPATTERN = @"^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$";
             
             string server;
-            bool isValid= System.Text.RegularExpressions.Regex.IsMatch(emailToValidate, VALIDATEEMAILPATTERN);
+            bool isValid=!string.IsNullOrEmpty(emailToValidate) && System.Text.RegularExpressions.Regex.IsMatch(emailToValidate, VALIDATEEMAILPATTERN);
             if (isValid)
             {
                 server = emailToValidate.Split('@')[1];

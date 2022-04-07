@@ -127,6 +127,8 @@ namespace BancDelTemps.ApiRest.Models
         public int TotalMinutosFromPorValidar=>TransaccionesFrom.Where(t=>t.Operacion.IsOk).Sum(t => t.Minutos);
         [NotMapped]
         public int TiempoDisponible => TotalMinutos - TotalMinutosFromPorValidar - TotalMinutosInPorValidar;
+        [NotMapped]
+        public bool CanSendMessageToValidators => JoinDate <= System.DateTime.UtcNow.Add(-MinTimeWaitToSetValidated);
 
         public override string ToString()
         {

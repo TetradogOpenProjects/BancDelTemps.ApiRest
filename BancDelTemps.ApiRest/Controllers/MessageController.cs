@@ -353,22 +353,25 @@ namespace BancDelTemps.ApiRest.Controllers
 
             if (ContextoHttp.IsAuthenticated)
             {
-                userFrom = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(ContextoHttp));
-                userTo = Context.GetUserPermiso(messageDTO.ToId);
-                //si no esta validado y ha esperado lo suficiente entonces puede reclamar ser validado sino nada
-                if (!Equals(userTo, default) && (userFrom.IsValidated || (userTo.IsModValidation && userFrom.JoinDate<=System.DateTime.UtcNow.Add(-Models.User.MinTimeWaitToSetValidated))))
+                if (!Equals(messageDTO, default))
                 {
-                    message = new Message();
-                    message.FromId = userFrom.Id;
-                    message.ToId = userTo.Id;
-                    message.Text = messageDTO.Text;
-                    message.Date = System.DateTime.UtcNow;
-                    Context.Messages.Add(message);
-                    await Context.SaveChangesAsync();
-                    result = Ok(new MessageDTO(message));
+                    userFrom = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(ContextoHttp));
+                    userTo = Context.GetUserPermiso(messageDTO.ToId);
+                    //si no esta validado y ha esperado lo suficiente entonces puede reclamar ser validado sino nada
+                    if (!Equals(userTo, default) && (userFrom.IsValidated || (userTo.IsModValidation && userFrom.CanSendMessageToValidators)))
+                    {
+                        message = new Message();
+                        message.FromId = userFrom.Id;
+                        message.ToId = userTo.Id;
+                        message.Text = messageDTO.Text;
+                        message.Date = System.DateTime.UtcNow;
+                        Context.Messages.Add(message);
+                        await Context.SaveChangesAsync();
+                        result = Ok(new MessageDTO(message));
+                    }
+                    else result = Unauthorized();
                 }
-                else result = Unauthorized();
-               
+                else result = BadRequest();
             }
             else result = Forbid();
 

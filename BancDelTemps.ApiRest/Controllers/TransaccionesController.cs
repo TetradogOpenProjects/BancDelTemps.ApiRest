@@ -148,7 +148,7 @@ namespace BancDelTemps.ApiRest.Controllers
             return result;
         }
 
-        [HttpPost("")]
+        [HttpPost]
         public async Task<IActionResult> AddTransaccion(TransaccionDTO transaccionDTO)
         {
             IActionResult result;
