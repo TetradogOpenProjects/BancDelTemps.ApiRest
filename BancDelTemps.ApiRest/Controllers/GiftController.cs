@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Swashbuckle.AspNetCore.Annotations;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +15,7 @@ namespace BancDelTemps.ApiRest.Controllers
     [Route("[controller]")]
     [ApiController]
     [Authorize]
+    [Produces("application/json", new string[] { "text/plain", "text/json" })]
     public class GiftController : Controller
     {
         Context Context { get; set; }
@@ -28,7 +30,7 @@ namespace BancDelTemps.ApiRest.Controllers
 
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(GiftsDTO))]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public async Task<IActionResult> GetAll()
         {
             IActionResult result;
@@ -38,7 +40,7 @@ namespace BancDelTemps.ApiRest.Controllers
                 user = await Context.Users.FindAsync(Models.User.GetEmailFromHttpContext(ContextoHttp));
                 result = Ok(new GiftsDTO(user, Context));
             }
-            else result = Forbid();
+            else result = this.NotLoggedIn();
             return result;
 
         }
@@ -46,7 +48,7 @@ namespace BancDelTemps.ApiRest.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(GiftsDTO))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public async Task<IActionResult> GetAllUser(long userId)
         {
             IActionResult result;
@@ -67,14 +69,14 @@ namespace BancDelTemps.ApiRest.Controllers
                 }
                 else result = Unauthorized();
             }
-            else result = Forbid();
+            else result = this.NotLoggedIn();
             return result;
         }
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(GiftDTO))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public async Task<IActionResult> AddGift(TransaccionDTO transaccionDTO)
         {
             User user;
@@ -111,7 +113,7 @@ namespace BancDelTemps.ApiRest.Controllers
                     else result = Unauthorized();
                 }
             }
-            else result = Forbid();
+            else result = this.NotLoggedIn();
 
             return result;
         }
@@ -121,6 +123,7 @@ namespace BancDelTemps.ApiRest.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public async Task<IActionResult> UpdateGift(TransaccionDTO transaccionDTO)
         {
             IActionResult result;
@@ -156,7 +159,7 @@ namespace BancDelTemps.ApiRest.Controllers
                     else result = Unauthorized();
                 }
             }
-            else result = Forbid();
+            else result = this.NotLoggedIn();
 
             return result;
         }

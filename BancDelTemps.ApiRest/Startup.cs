@@ -15,6 +15,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Reflection;
+using System.IO;
 
 namespace BancDelTemps.ApiRest
 {
@@ -32,9 +34,23 @@ namespace BancDelTemps.ApiRest
         {
 
             services.AddControllers();
-            services.AddSwaggerGen(c =>
+            services.AddSwaggerGen(options =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "BancDelTemps.ApiRest", Version = "v1" });
+                string xmlFilename;
+
+                options.SwaggerDoc("v1", new OpenApiInfo {
+                    Title = "BancDelTemps.ApiRest",
+                    Version = "v1",
+                    License = new OpenApiLicense
+                    {
+                        Name = "GNU V3",
+                        Url = new Uri("https://www.gnu.org/licenses/gpl-3.0.en.html")
+                    }
+                });
+                //así los comentarios de los métodos se ven en swagger
+                xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
+                options.EnableAnnotations();
             });
 
             services.AddDbContextPool<Context>(o => o.UseMySql(

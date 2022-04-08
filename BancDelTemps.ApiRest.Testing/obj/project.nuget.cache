@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "/gc2rgNbTxAMMVyDLpRNWxFMQTVxdLVefoiCXSEV3sfVYt9HX84Sm1U859hBI/zUKenGqduA8AV3xtOOqAmmqg==",
+  "dgSpecHash": "wuzIKaoB9THFXl5ZwvKDrs9AiOw9k/2dBYpliwJqFRd93VasuM14RCJeZRo8hkXwvZXTZjL/XEA4xkUQEcSLAw==",
   "success": true,
   "projectFilePath": "C:\\Users\\Gabriel\\Documents\\GitHub\\BancDelTemps.ApiRest\\BancDelTemps.ApiRest.Testing\\BancDelTemps.ApiRest.Testing.csproj",
   "expectedPackageFiles": [
@@ -59,6 +59,7 @@
     "C:\\Users\\Gabriel\\.nuget\\packages\\runtime.ubuntu.16.04-x64.runtime.native.system.security.cryptography.openssl\\4.3.0\\runtime.ubuntu.16.04-x64.runtime.native.system.security.cryptography.openssl.4.3.0.nupkg.sha512",
     "C:\\Users\\Gabriel\\.nuget\\packages\\runtime.ubuntu.16.10-x64.runtime.native.system.security.cryptography.openssl\\4.3.0\\runtime.ubuntu.16.10-x64.runtime.native.system.security.cryptography.openssl.4.3.0.nupkg.sha512",
     "C:\\Users\\Gabriel\\.nuget\\packages\\swashbuckle.aspnetcore\\6.3.0\\swashbuckle.aspnetcore.6.3.0.nupkg.sha512",
+    "C:\\Users\\Gabriel\\.nuget\\packages\\swashbuckle.aspnetcore.annotations\\6.3.0\\swashbuckle.aspnetcore.annotations.6.3.0.nupkg.sha512",
     "C:\\Users\\Gabriel\\.nuget\\packages\\swashbuckle.aspnetcore.swagger\\6.3.0\\swashbuckle.aspnetcore.swagger.6.3.0.nupkg.sha512",
     "C:\\Users\\Gabriel\\.nuget\\packages\\swashbuckle.aspnetcore.swaggergen\\6.3.0\\swashbuckle.aspnetcore.swaggergen.6.3.0.nupkg.sha512",
     "C:\\Users\\Gabriel\\.nuget\\packages\\swashbuckle.aspnetcore.swaggerui\\6.3.0\\swashbuckle.aspnetcore.swaggerui.6.3.0.nupkg.sha512",

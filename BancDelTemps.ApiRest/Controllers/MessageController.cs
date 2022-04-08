@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Swashbuckle.AspNetCore.Annotations;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,6 +14,7 @@ namespace BancDelTemps.ApiRest.Controllers
     [Route("[controller]")]
     [ApiController]
     [Authorize]
+    [Produces("application/json", new string[] { "text/plain", "text/json" })]
     public class MessageController : Controller
     {
         Context Context { get; set; }
@@ -27,7 +29,7 @@ namespace BancDelTemps.ApiRest.Controllers
         [HttpGet]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(MessageDTO[]))]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public IActionResult GetAll()
         {
             return GetAll(0);
@@ -36,7 +38,7 @@ namespace BancDelTemps.ApiRest.Controllers
         [HttpGet("ticksUTCLastTime:long")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(MessageDTO[]))]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public IActionResult GetAll(long ticksUTCLastTime)
         {
             IActionResult result;
@@ -50,18 +52,18 @@ namespace BancDelTemps.ApiRest.Controllers
                                             .Select(m => new MessageDTO(m))
                            );
             }
-            else result = Forbid();
+            else result = this.NotLoggedIn();
 
             return result;
 
         }
         //hide
-        [HttpPost("hide/{idMessage:long}")]
+        [HttpPost("Hide/{idMessage:long}")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public async Task<IActionResult> HideMessage(long idMessage)
         {
             IActionResult result;
@@ -120,16 +122,16 @@ namespace BancDelTemps.ApiRest.Controllers
                 }
                 else result = NotFound();
             }
-            else result = Forbid();
+            else result = this.NotLoggedIn();
 
             return result;
         }
         //hideAll
-        [HttpPost("all/hide/{idMessageLast:long}")]
+        [HttpPost("All/Hide/{idMessageLast:long}")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(int))]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public async Task<IActionResult> HideAllMessage(long idMessageLast)
         {
             IActionResult result;
@@ -179,17 +181,17 @@ namespace BancDelTemps.ApiRest.Controllers
                 }
                 else result = NotFound();
             }
-            else result = Forbid();
+            else result = this.NotLoggedIn();
 
             return result;
         }
         //readed
-        [HttpPost("readed/{idMessage:long}")]
+        [HttpPost("Readed/{idMessage:long}")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public async Task<IActionResult> ReadedMessage(long idMessage)
         {
             IActionResult result;
@@ -219,17 +221,17 @@ namespace BancDelTemps.ApiRest.Controllers
                 }
                 else result = NotFound();
             }
-            else result = Forbid();
+            else result = this.NotLoggedIn();
 
             return result;
         }
         //mark to revise
-        [HttpPost("markToRevise/{idMessage:long}")]
+        [HttpPost("MarkToRevise/{idMessage:long}")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public async Task<IActionResult> MarkToRevise(long idMessage)
         {
             IActionResult result;
@@ -259,17 +261,17 @@ namespace BancDelTemps.ApiRest.Controllers
                 }
                 else result = NotFound();
             }
-            else result = Forbid();
+            else result = this.NotLoggedIn();
 
             return result;
         }
         //isRevised
-        [HttpGet("markToRevise/{idMessage:long}")]
+        [HttpGet("MarkToRevise/{idMessage:long}")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(bool))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public async Task<IActionResult> IsRevised(long idMessage)
         {
             IActionResult result;
@@ -292,25 +294,25 @@ namespace BancDelTemps.ApiRest.Controllers
                 }
                 else result = NotFound();
             }
-            else result = Forbid();
+            else result = this.NotLoggedIn();
 
             return result;
         }
         //toRevisar
-        [HttpGet("toRevise")]
+        [HttpGet("ToRevise")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(MessageDTO[]))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public async Task<IActionResult> ToRevise()
         {
             return await ToRevise(0);
         }
-        [HttpGet("toRevise/{ticksUTCLast:long}")]
+        [HttpGet("ToRevise/{ticksUTCLast:long}")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(MessageDTO[]))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public async Task<IActionResult> ToRevise(long ticksUTCLast)
         {
             IActionResult result;
@@ -330,17 +332,17 @@ namespace BancDelTemps.ApiRest.Controllers
                 }
                 else result = Unauthorized();
             }
-            else result = Forbid();
+            else result = this.NotLoggedIn();
 
             return result;
         }
         //revisado
-        [HttpPost("toRevise/{idMessage:long}")]
+        [HttpPost("ToRevise/{idMessage:long}")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public async Task<IActionResult> Revisado(long idMessage)
         {
             IActionResult result;
@@ -373,17 +375,18 @@ namespace BancDelTemps.ApiRest.Controllers
                 }
                 else result = Unauthorized();
             }
-            else result = Forbid();
+            else result = this.NotLoggedIn();
 
             return result;
         }
         //send
-        [HttpPost("send")]
+        [HttpPost("Send")]
         [Authorize]
+        [ProducesResponseType(OwnStatusCodes.ContentForbbiden)]
         [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(MessageDTO))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public async Task<IActionResult> Send(MessageDTO messageDTO)
         {
             IActionResult result;
@@ -413,14 +416,14 @@ namespace BancDelTemps.ApiRest.Controllers
                         else
                         {
                             //el contenido no es apto para la red
-                            result = BadRequest();//poner un error propio
+                            result = this.ContentForbbiden();
                         }
                     }
                     else result = Unauthorized();
                 }
                 else result = BadRequest();
             }
-            else result = Forbid();
+            else result = this.NotLoggedIn();
 
             return result;
         }
@@ -435,7 +438,7 @@ namespace BancDelTemps.ApiRest.Controllers
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(int))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]        
+        [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public async Task<IActionResult> Clear()
         {
             IActionResult result;
@@ -454,7 +457,7 @@ namespace BancDelTemps.ApiRest.Controllers
                 }
                 else result = Unauthorized();
             }
-            else result = Forbid();
+            else result = this.NotLoggedIn();
 
             return result;
         }

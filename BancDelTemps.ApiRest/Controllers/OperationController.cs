@@ -3,16 +3,19 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Swashbuckle.AspNetCore.Annotations;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+
 
 namespace BancDelTemps.ApiRest.Controllers
 {
     [Route("[controller]")]
     [ApiController]
     [Authorize]
+    [Produces("application/json", new string[] { "text/plain", "text/json" })]
     public class OperationController : ControllerBase
     {
         Context Context { get; set; }
@@ -26,7 +29,7 @@ namespace BancDelTemps.ApiRest.Controllers
         [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(OperacionDTO))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public async Task<IActionResult> Get(long idOperacion)
         {
             IActionResult result;
@@ -47,14 +50,14 @@ namespace BancDelTemps.ApiRest.Controllers
                 }
                 else result = Unauthorized();
             }
-            else result = Forbid();
+            else result = this.NotLoggedIn();
             return result;
 
         }
         [HttpGet("All/{ticksLastUpdate:long}")]
         [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(OperacionDTO[]))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public IActionResult GetToValidateAll(long ticksLastUpdate)
         {
             IActionResult result;
@@ -72,7 +75,7 @@ namespace BancDelTemps.ApiRest.Controllers
                 }
                 else result = Unauthorized();
             }
-            else result = Forbid();
+            else result = this.NotLoggedIn();
             return result;
 
         }
@@ -82,7 +85,7 @@ namespace BancDelTemps.ApiRest.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public async Task<IActionResult> AddOperation(OperacionDTO operacionDTO)
         {
             IActionResult result;
@@ -120,7 +123,7 @@ namespace BancDelTemps.ApiRest.Controllers
                     else result = Unauthorized();
                 }
             }
-            else result = Forbid();
+            else result = this.NotLoggedIn();
             return result;
         }
         [HttpPost("{idOpracion:long}/{isValid:bool}")]
@@ -128,6 +131,7 @@ namespace BancDelTemps.ApiRest.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public async Task<IActionResult> Validate(long idOperacion, bool isValid)
         {
             return await DoValidate(idOperacion, isValid);
@@ -136,7 +140,8 @@ namespace BancDelTemps.ApiRest.Controllers
         [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(OperacionDTO))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]        
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public async Task<IActionResult> Revalidate(long idOperacion, bool isValid)
         {
             return await DoValidate(idOperacion, isValid, true);
@@ -144,7 +149,7 @@ namespace BancDelTemps.ApiRest.Controllers
 
         async Task<IActionResult> DoValidate(long idOperacion, bool isValid, bool force = false)
         {
-            ActionResult result;
+            IActionResult result;
             User validador;
             Operacion operacion;
             if (ContextoHttp.IsAuthenticated)
@@ -174,7 +179,7 @@ namespace BancDelTemps.ApiRest.Controllers
                 }
                 else result = Unauthorized();
             }
-            else result = Forbid();
+            else result = this.NotLoggedIn();
             return result;
         }
 
@@ -183,9 +188,10 @@ namespace BancDelTemps.ApiRest.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public async Task<IActionResult> Delete(long idOperacion)
         {
-            ActionResult result;
+            IActionResult result;
             User mod;
             Operacion operacion;
             if (ContextoHttp.IsAuthenticated)
@@ -217,7 +223,7 @@ namespace BancDelTemps.ApiRest.Controllers
                 else result = Unauthorized();
 
             }
-            else result = Forbid();
+            else result = this.NotLoggedIn();
             return result;
         }
     }

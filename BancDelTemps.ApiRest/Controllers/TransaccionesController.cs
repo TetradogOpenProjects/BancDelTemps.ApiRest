@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Swashbuckle.AspNetCore.Annotations;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -14,6 +15,7 @@ namespace BancDelTemps.ApiRest.Controllers
     [Route("[controller]")]
     [ApiController]
     [Authorize]
+    [Produces("application/json", new string[] { "text/plain", "text/json" })]
     public class TransaccionesController : Controller
     {
         delegate Task<IActionResult> ModifyTransaccionDelegate(Transaccion transaccion, TransaccionDTO transaccionDTO);
@@ -31,7 +33,7 @@ namespace BancDelTemps.ApiRest.Controllers
         [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(TransaccionDTO))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public async Task<IActionResult> Get(long idTransaccion)
         {
 
@@ -54,14 +56,14 @@ namespace BancDelTemps.ApiRest.Controllers
                 else result = Unauthorized();
 
             }
-            else result = Forbid();
+            else result = this.NotLoggedIn();
 
             return result;
         }
         [HttpGet("Delegar/{idTransaccionDelegada:long}")]
         [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(TransaccionDelegadaDTO))]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public IActionResult GetDelegada(long idTransaccionDelegada)
         {
             //falta probar
@@ -81,14 +83,14 @@ namespace BancDelTemps.ApiRest.Controllers
                     result = Ok(new TransaccionDelegadaDTO(transaccionDelegada));
                 }
             }
-            else result = Forbid();
+            else result = this.NotLoggedIn();
 
             return result;
         }
 
         [HttpGet("All/{ticksLastUpdate:long}")]
         [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(TransaccionesDTO))]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public IActionResult GetAll(long ticksLastUpdate)
         {
             IActionResult result;
@@ -104,7 +106,7 @@ namespace BancDelTemps.ApiRest.Controllers
 
         [HttpGet("Delegadas")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TransaccionDelegadaDTO[]))]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public IActionResult GetAllDelegadas()
         {
             IActionResult result;
@@ -116,7 +118,7 @@ namespace BancDelTemps.ApiRest.Controllers
             }
             else
             {
-                result = Forbid();
+                result = this.NotLoggedIn();
             }
             return result;
         }
@@ -124,7 +126,7 @@ namespace BancDelTemps.ApiRest.Controllers
         [HttpGet("User/{userId:long}/{ticksLastUpdate:long}")]
         [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(TransaccionesDTO))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public IActionResult GetAllUser(long userId, long ticksLastUpdate)
         {
             IActionResult result;
@@ -138,14 +140,14 @@ namespace BancDelTemps.ApiRest.Controllers
                 }
                 else result = Unauthorized();
             }
-            else result = Forbid();
+            else result = this.NotLoggedIn();
             return result;
         }
 
         [HttpGet("User/Delegadas/{userId:long}")]
         [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(TransaccionDelegadaDTO[]))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public IActionResult GetAllDelegadasUser(long userId)
         {
             IActionResult result;
@@ -162,7 +164,7 @@ namespace BancDelTemps.ApiRest.Controllers
             }
             else
             {
-                result = Forbid();
+                result = this.NotLoggedIn();
             }
             return result;
         }
@@ -173,7 +175,8 @@ namespace BancDelTemps.ApiRest.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [SwaggerResponse(OwnStatusCodes.NotValidated, OwnMessage.NotValidated, typeof(ContentResult))]
+        [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public async Task<IActionResult> AddTransaccion(TransaccionDTO transaccionDTO)
         {
             IActionResult result;
@@ -221,10 +224,10 @@ namespace BancDelTemps.ApiRest.Controllers
                         }
                     }
                 }
-                else result = Forbid();//no se puede trabajar con alguien no validado!
+                else result = this.NotValidated();//no se puede trabajar con alguien no validado!
 
             }
-            else result = Forbid();
+            else result = this.NotLoggedIn();
             return result;
         }
         async Task<IActionResult> DoTransaccion([NotNull]TransaccionDTO transaccionDTO, User user=default, Operacion operacion=default)
@@ -336,7 +339,8 @@ namespace BancDelTemps.ApiRest.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [SwaggerResponse(OwnStatusCodes.NotValidated, OwnMessage.NotValidated, typeof(ContentResult))]
+        [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public async Task<IActionResult> UpdateTransaccion(TransaccionDTO transaccionDTO)
         {
             return await ModifyTransaccion(transaccionDTO,async (transaccion, tDTO) =>
@@ -349,7 +353,7 @@ namespace BancDelTemps.ApiRest.Controllers
                 }
                 else if (!user.IsValidated)
                 {
-                    result = Forbid();
+                    result = this.NotValidated();
                 }
                 else
                 {
@@ -438,7 +442,7 @@ namespace BancDelTemps.ApiRest.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public async Task<IActionResult> DeleteTransaccion(TransaccionDTO transaccionDTO)
         {
             return await ModifyTransaccion(transaccionDTO, (transaccion, tDTO) =>
@@ -506,7 +510,7 @@ namespace BancDelTemps.ApiRest.Controllers
                     result = BadRequest();
                 }
             }
-            else result = Forbid();
+            else result = this.NotLoggedIn();
 
 
             return result;
@@ -518,7 +522,10 @@ namespace BancDelTemps.ApiRest.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]        
+        [SwaggerResponse(OwnStatusCodes.NotValidated, OwnMessage.NotValidated, typeof(ContentResult))]
+        [SwaggerResponse(OwnStatusCodes.OperacionAcabada, OwnMessage.OperacionAcabada, typeof(ContentResult))]
+        [SwaggerResponse(OwnStatusCodes.OperacionRepetida, OwnMessage.OperacionRepetida, typeof(ContentResult))]
+        [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public async Task<IActionResult> AddTransaccionDelegada(TransaccionDelegadaDTO transaccionDelegadaDTO)
         {
             IActionResult result;
@@ -543,7 +550,7 @@ namespace BancDelTemps.ApiRest.Controllers
                     }
                     else if (operacion.Completada)
                     {
-                        result = Forbid();//otro error para decir que ya se ha terminado
+                        result = this.OperacionAcabada();//otro error para decir que ya se ha terminado
                     }
                     else if (userFrom.Id == operacion.UserId || userFrom.IsModTransaccion)
                     {
@@ -566,10 +573,10 @@ namespace BancDelTemps.ApiRest.Controllers
                                 else
                                 {
                                     //la operacion ya se ha delegado
-                                    result = Forbid();
+                                    result = this.OperacionRepetida();//otro error para decir que ya se ha delegado
                                 }
                             }
-                            else result = Forbid();
+                            else result = this.NotValidated();
                         }
                         else result = NotFound();
 
@@ -580,7 +587,7 @@ namespace BancDelTemps.ApiRest.Controllers
                     }
                 }
             }
-            else result = Forbid();
+            else result = this.NotLoggedIn();
 
             return result;
         }
@@ -589,8 +596,9 @@ namespace BancDelTemps.ApiRest.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
+        [SwaggerResponse(OwnStatusCodes.NotValidated, OwnMessage.NotValidated, typeof(ContentResult))]
+        [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public async Task<IActionResult> UpdateTransaccionDelegada(TransaccionDelegadaDTO transaccionDelegadaDTO)
         {
             return await ModifyTransaccionDelegada(transaccionDelegadaDTO, (transaccionDelegada, tDTO) =>
@@ -603,7 +611,7 @@ namespace BancDelTemps.ApiRest.Controllers
                 }
                 else if (!userDelegado.IsValidated)
                 {
-                    result = Forbid();//otro error para decir que no esta validado
+                    result = this.NotValidated();
                 }
                 else
                 {
@@ -621,8 +629,8 @@ namespace BancDelTemps.ApiRest.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound,Type=typeof(string))]
+        [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public async Task<IActionResult> DeleteTransaccionDelegada(TransaccionDelegadaDTO transaccionDelegadaDTO)
         {
             return await ModifyTransaccionDelegada(transaccionDelegadaDTO, (transaccionDelegada, tDTO) =>
@@ -652,14 +660,14 @@ namespace BancDelTemps.ApiRest.Controllers
 
                     if (Equals(transaccionDelegada, default))
                     {
-                        result = NotFound();
+                        result = NotFound(nameof(TransaccionDelegada));
                     }
                     else
                     {
                         operacion = await Context.Operaciones.FindAsync(transaccionDelegadaDTO.IdOperacion);
                         if (Equals(operacion, default))
                         {
-                            result = NotFound();
+                            result = NotFound(nameof(Operacion));
                         }
                         else if (user.Id == operacion.UserId || user.IsModTransaccion)
                         {
@@ -674,7 +682,7 @@ namespace BancDelTemps.ApiRest.Controllers
                 }
 
             }
-            else result = Forbid();
+            else result = this.NotLoggedIn();
             return result;
         }
 

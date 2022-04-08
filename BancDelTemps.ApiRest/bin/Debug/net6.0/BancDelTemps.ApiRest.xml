@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>BancDelTemps.ApiRest</name>
+    </assembly>
+    <members>
+        <member name="T:BancDelTemps.ApiRest.Controllers.AccountController">
+            <summary>
+            Este controlador sirve para tratar todo lo relativo a las cuentas de usuario
+            </summary>
+        </member>
+        <member name="P:BancDelTemps.ApiRest.Controllers.AccountController.AccountEmailServerValid">
+            <summary>
+            Son los servidores de autenticación de la aplicación
+            </summary>
+        </member>
+        <member name="P:BancDelTemps.ApiRest.Controllers.AccountController.ContextoHttp">
+            <summary>
+            Es para los Test
+            </summary>
+        </member>
+        <member name="M:BancDelTemps.ApiRest.Controllers.AccountController.GetUser">
+            <summary>
+            Obtiene toda la información del usuario logueado
+            </summary>
+        </member>
+        <member name="P:BancDelTemps.ApiRest.Models.Operacion.IsValid">
+            <summary>
+            Quien revisa ha aprobado la operación
+            </summary>
+        </member>
+        <member name="P:BancDelTemps.ApiRest.Models.User.ValidatedRegister">
+            <summary>
+            Así si se ha equivocado de cuenta al hacer login se puede recuperar del error sin problemas
+            </summary>
+        </member>
+    </members>
+</doc>

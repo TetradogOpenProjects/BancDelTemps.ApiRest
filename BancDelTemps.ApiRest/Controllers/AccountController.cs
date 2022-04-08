@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Swashbuckle.AspNetCore.Annotations;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
@@ -15,17 +16,27 @@ using System.Threading.Tasks;
 
 namespace BancDelTemps.ApiRest.Controllers
 {
+    /// <summary>
+    /// Este controlador sirve para tratar todo lo relativo a las cuentas de usuario
+    /// </summary>
     [AllowAnonymous]
     [Route("[controller]")]
     [ApiController]
+    [Produces("application/json", new string[] { "text/plain", "text/json" })]
     public class AccountController : Controller
     {
+        /// <summary>
+        /// Son los servidores de autenticación de la aplicación
+        /// </summary>
         public static string[] AccountEmailServerValid => new string[] {
                                                                         "gmail.com",
                                                                         "googlemail.com"
                                                                       };
         Context Context { get; set; }
         IConfiguration Configuration { get; set; }
+        /// <summary>
+        /// Es para los Test
+        /// </summary>
         public IHttpContext ContextoHttp { get; set; }
         public AccountController(Context context, IConfiguration configuration)
         {
@@ -33,11 +44,15 @@ namespace BancDelTemps.ApiRest.Controllers
             Configuration = configuration;
             ContextoHttp = new ContextoHttp(HttpContext);
         }
-
+        /// <summary>
+        /// Obtiene toda la información del usuario logueado
+        /// </summary>
         [HttpGet]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserDTO))]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+     
+        [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn,typeof(ContentResult))]
+
         public IActionResult GetUser()
         {
             IActionResult result;
@@ -49,7 +64,7 @@ namespace BancDelTemps.ApiRest.Controllers
                 result = Ok(new UserDTO(user));
 
             }
-            else result = Forbid();
+            else result = this.NotLoggedIn();
             return result;
         }
 
@@ -57,7 +72,7 @@ namespace BancDelTemps.ApiRest.Controllers
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserDTO))]
         [ProducesResponseType(StatusCodes.Status206PartialContent, Type = typeof(UserBasicDTO))]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public IActionResult GetAllUsers()
         {
             return GetAllUsers(0);
@@ -66,7 +81,7 @@ namespace BancDelTemps.ApiRest.Controllers
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserDTO))]
         [ProducesResponseType(StatusCodes.Status206PartialContent, Type = typeof(UserBasicDTO))]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public IActionResult GetAllUsers(long ticksUTCLastTime)
         {//así no hay que dar todos los usuarios siempre
             IActionResult result;
@@ -98,7 +113,7 @@ namespace BancDelTemps.ApiRest.Controllers
                                );
                 }
             }
-            else result = Forbid();
+            else result = this.NotLoggedIn();
             return result;
         }
 
@@ -110,7 +125,7 @@ namespace BancDelTemps.ApiRest.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public async Task<IActionResult> UpdateUser(UserDTO userToUpdateData)
         {
             IActionResult result;
@@ -169,7 +184,7 @@ namespace BancDelTemps.ApiRest.Controllers
                 else result = BadRequest();
 
             }
-            else result = Forbid();
+            else result = this.NotLoggedIn();
             return result;
         }
 
@@ -232,7 +247,7 @@ namespace BancDelTemps.ApiRest.Controllers
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string[]))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public async Task<IActionResult> GetAllPermisos()
         {
             IActionResult result;
@@ -246,7 +261,7 @@ namespace BancDelTemps.ApiRest.Controllers
                 }
                 else result = Unauthorized();
             }
-            else result = Forbid();
+            else result = this.NotLoggedIn();
             return result;
         }
 
@@ -311,7 +326,7 @@ namespace BancDelTemps.ApiRest.Controllers
         [HttpPut("Register")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public async Task<IActionResult> Register()
         {
             IActionResult result;
@@ -331,14 +346,14 @@ namespace BancDelTemps.ApiRest.Controllers
 
 
             }
-            else result = Forbid();
+            else result = this.NotLoggedIn();
             return result;
         }
         [HttpDelete("Register")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public async Task<IActionResult> Unregister()
         {
             IActionResult result;
@@ -359,7 +374,7 @@ namespace BancDelTemps.ApiRest.Controllers
 
 
             }
-            else result = Forbid();
+            else result = this.NotLoggedIn();
             return result;
         }
         [HttpDelete("Register/userId:long")]
@@ -367,7 +382,7 @@ namespace BancDelTemps.ApiRest.Controllers
         [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(UserBasicDTO))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public async Task<IActionResult> UnRegister(long userId)
         {
             IActionResult result;
@@ -389,7 +404,7 @@ namespace BancDelTemps.ApiRest.Controllers
                 }
                 else result = Unauthorized();
             }
-            else result = Forbid();
+            else result = this.NotLoggedIn();
 
             return result;
         }
@@ -397,7 +412,7 @@ namespace BancDelTemps.ApiRest.Controllers
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(UserBasicDTO[]))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public async Task<IActionResult> UnRegisterAllUnDone()
         {
             IActionResult result;
@@ -415,7 +430,7 @@ namespace BancDelTemps.ApiRest.Controllers
                 }
                 else result = Unauthorized();
             }
-            else result = Forbid();
+            else result = this.NotLoggedIn();
             return result;
         }
 
@@ -425,7 +440,8 @@ namespace BancDelTemps.ApiRest.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [SwaggerResponse(OwnStatusCodes.NotValidated, OwnMessage.NotValidated, typeof(ContentResult))]
+        [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public async Task<IActionResult> PermissionsPut(PermisoUserDTO permisoUserDTO)
         {
             IActionResult result;
@@ -486,7 +502,7 @@ namespace BancDelTemps.ApiRest.Controllers
                                 }
                                 result = Ok(permisosOk);
                             }
-                            else result = Forbid();//el usuario aun no se ha validado! //usar error propio!!
+                            else result = this.NotValidated();
 
                         }
                         else result = NotFound();
@@ -496,7 +512,7 @@ namespace BancDelTemps.ApiRest.Controllers
                 }
                 else result = BadRequest();
             }
-            else result = Forbid();
+            else result = this.NotLoggedIn();
 
             return result;
         }
@@ -507,7 +523,7 @@ namespace BancDelTemps.ApiRest.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public async Task<IActionResult> PermissionsDelete(PermisoUserDTO permisoUserDTO)
         {
             IActionResult result;
@@ -575,7 +591,7 @@ namespace BancDelTemps.ApiRest.Controllers
                 }
                 else result = BadRequest();
             }
-            else result = Forbid();
+            else result = this.NotLoggedIn();
             return result;
         }
 
@@ -583,7 +599,7 @@ namespace BancDelTemps.ApiRest.Controllers
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserBasicDTO[]))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public IActionResult GetAllInValidatedUsers()
         {
             IActionResult result;
@@ -600,7 +616,7 @@ namespace BancDelTemps.ApiRest.Controllers
                     result = Unauthorized();
                 }
             }
-            else result = Forbid();
+            else result = this.NotLoggedIn();
             return result;
         }
         [HttpPut("Validate/{userId:long}")]
@@ -608,7 +624,7 @@ namespace BancDelTemps.ApiRest.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public async Task<IActionResult> ValidarUsuario(long userId)
         {
             IActionResult result;
@@ -640,7 +656,7 @@ namespace BancDelTemps.ApiRest.Controllers
             }
             else
             {
-                result = Forbid();
+                result = this.NotLoggedIn();
             }
             return result;
         }
