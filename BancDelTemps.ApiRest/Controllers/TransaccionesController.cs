@@ -596,7 +596,7 @@ namespace BancDelTemps.ApiRest.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ParamDTO))]
         [SwaggerResponse(OwnStatusCodes.NotValidated, OwnMessage.NotValidated, typeof(ContentResult))]
         [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public async Task<IActionResult> UpdateTransaccionDelegada(TransaccionDelegadaDTO transaccionDelegadaDTO)
@@ -629,7 +629,7 @@ namespace BancDelTemps.ApiRest.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status404NotFound,Type=typeof(string))]
+        [ProducesResponseType(StatusCodes.Status404NotFound,Type=typeof(ParamDTO))]
         [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public async Task<IActionResult> DeleteTransaccionDelegada(TransaccionDelegadaDTO transaccionDelegadaDTO)
         {
@@ -660,14 +660,14 @@ namespace BancDelTemps.ApiRest.Controllers
 
                     if (Equals(transaccionDelegada, default))
                     {
-                        result = NotFound(nameof(TransaccionDelegada));
+                        result = NotFound(new ParamDTO(nameof(TransaccionDelegada)));
                     }
                     else
                     {
                         operacion = await Context.Operaciones.FindAsync(transaccionDelegadaDTO.IdOperacion);
                         if (Equals(operacion, default))
                         {
-                            result = NotFound(nameof(Operacion));
+                            result = NotFound(new ParamDTO(nameof(Operacion)));
                         }
                         else if (user.Id == operacion.UserId || user.IsModTransaccion)
                         {

@@ -129,7 +129,7 @@ namespace BancDelTemps.ApiRest.Controllers
         //hideAll
         [HttpPost("All/Hide/{idMessageLast:long}")]
         [Authorize]
-        [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(int))]
+        [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(CountDTO))]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public async Task<IActionResult> HideAllMessage(long idMessageLast)
@@ -175,7 +175,7 @@ namespace BancDelTemps.ApiRest.Controllers
                     {
                         await Context.SaveChangesAsync();
                     }
-                    result = Ok(totalHidden);
+                    result = Ok(new CountDTO(totalHidden));
 
 
                 }
@@ -268,7 +268,7 @@ namespace BancDelTemps.ApiRest.Controllers
         //isRevised
         [HttpGet("MarkToRevise/{idMessage:long}")]
         [Authorize]
-        [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(bool))]
+        [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(IsOkDTO))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
@@ -287,7 +287,7 @@ namespace BancDelTemps.ApiRest.Controllers
                     if (Equals(user.Id, message.ToId) || user.IsModMessages)
                     {
 
-                        result = Ok(message.DateRevised.HasValue);
+                        result = Ok(new IsOkDTO(message.DateRevised.HasValue));
 
                     }
                     else result = Unauthorized();
@@ -436,7 +436,7 @@ namespace BancDelTemps.ApiRest.Controllers
         //delete all
         [HttpDelete("Clear")]
         [Authorize]
-        [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(int))]
+        [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(CountDTO))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public async Task<IActionResult> Clear()
@@ -453,7 +453,7 @@ namespace BancDelTemps.ApiRest.Controllers
                     messagesToDelete = Context.Messages.Where(m => m.CanDelete).ToArray();
                     Context.Messages.RemoveRange(messagesToDelete);
                     await Context.SaveChangesAsync();
-                    result = Ok(messagesToDelete.Length);//así sabe cuanto se ha borrado
+                    result = Ok(new CountDTO(messagesToDelete.Length));//así sabe cuanto se ha borrado
                 }
                 else result = Unauthorized();
             }

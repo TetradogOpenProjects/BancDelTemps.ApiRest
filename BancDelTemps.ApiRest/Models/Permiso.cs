@@ -32,5 +32,18 @@ namespace BancDelTemps.ApiRest.Models
         public string Nombre { get; set; }
         public ICollection<UserPermiso> Users { get; set; }
     }
+    public class PermisoDTO
+    {
+        public PermisoDTO(Permiso permiso) : this(permiso.Nombre)
+        { }
+
+        public PermisoDTO(string permiso)
+        {
+            Permiso = permiso;
+        }
+
+        public string Permiso { get; set; }
+    }
+   
 
 }

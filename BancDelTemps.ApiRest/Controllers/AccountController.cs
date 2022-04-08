@@ -245,7 +245,7 @@ namespace BancDelTemps.ApiRest.Controllers
 
         [HttpGet("Permisos/All")]
         [Authorize]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string[]))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PermisoDTO[]))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
         public async Task<IActionResult> GetAllPermisos()
@@ -257,7 +257,7 @@ namespace BancDelTemps.ApiRest.Controllers
                 user = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(ContextoHttp));
                 if (user.IsAdmin)
                 {
-                    result = Ok((await Context.Permisos.ToListAsync()).Select(p => p.Nombre));
+                    result = Ok((await Context.Permisos.ToListAsync()).Select(p =>new PermisoDTO(p)));
                 }
                 else result = Unauthorized();
             }
@@ -266,7 +266,7 @@ namespace BancDelTemps.ApiRest.Controllers
         }
 
         [HttpGet("Login")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(LoginDTO))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public IActionResult GoogleLogin()
         {
@@ -276,7 +276,7 @@ namespace BancDelTemps.ApiRest.Controllers
         }
 
         [HttpGet("Token")]
-        [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(string))]
+        [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(LoginDTO))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
 
         public async Task<IActionResult> GetToken()
@@ -320,7 +320,7 @@ namespace BancDelTemps.ApiRest.Controllers
             }
 
             token = Context.GetUserPermiso(user).GetToken(Configuration);//así obtengo la información guardada
-            return Ok(token.WriteToken());
+            return Ok(new LoginDTO(token));
         }
 
         [HttpPut("Register")]
@@ -436,7 +436,7 @@ namespace BancDelTemps.ApiRest.Controllers
 
         [HttpPut("Permisos")]
         [Authorize]
-        [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(string[]))]
+        [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(PermisoDTO[]))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -500,7 +500,7 @@ namespace BancDelTemps.ApiRest.Controllers
                                     }
 
                                 }
-                                result = Ok(permisosOk);
+                                result = Ok(permisosOk.Select(p=>new PermisoDTO(p)));
                             }
                             else result = this.NotValidated();
 
@@ -519,7 +519,7 @@ namespace BancDelTemps.ApiRest.Controllers
 
         [HttpDelete("Permisos")]
         [Authorize]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string[]))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PermisoDTO[]))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -577,11 +577,11 @@ namespace BancDelTemps.ApiRest.Controllers
 
                                         }
 
-
+                                        
                                     }
 
                                 }
-                                result = Ok(permisosOk);
+                                result = Ok(permisosOk.Select(p=>new PermisoDTO(p)));
                             }
                         }
                         else result = NotFound();
