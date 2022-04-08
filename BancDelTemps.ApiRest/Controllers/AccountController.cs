@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -35,6 +36,8 @@ namespace BancDelTemps.ApiRest.Controllers
 
         [HttpGet]
         [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserDTO))]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public IActionResult GetUser()
         {
             IActionResult result;
@@ -52,12 +55,18 @@ namespace BancDelTemps.ApiRest.Controllers
 
         [HttpGet("All")]
         [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserDTO))]
+        [ProducesResponseType(StatusCodes.Status206PartialContent, Type = typeof(UserBasicDTO))]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public IActionResult GetAllUsers()
         {
             return GetAllUsers(0);
         }
         [HttpGet("All/ticksUTCLastTime:long")]
         [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserDTO))]
+        [ProducesResponseType(StatusCodes.Status206PartialContent, Type = typeof(UserBasicDTO))]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public IActionResult GetAllUsers(long ticksUTCLastTime)
         {//así no hay que dar todos los usuarios siempre
             IActionResult result;
@@ -75,14 +84,14 @@ namespace BancDelTemps.ApiRest.Controllers
                 }
                 else if (user.IsValidated)
                 {
-                    result = Ok(Context.Users.Where(u => u.IsValidated && u.LastUpdate.Ticks > ticksUTCLastTime)
+                    result = StatusCode(StatusCodes.Status206PartialContent,Context.Users.Where(u => u.IsValidated && u.LastUpdate.Ticks > ticksUTCLastTime)
                                              .OrderBy(u => u.LastUpdate)
                                              .Select(u => new UserBasicDTO(u))
                                );
                 }
                 else
                 {//así pueden ponerse en contacto con los responsables de la validación
-                    result = Ok(Context.Users.Include(u => u.Permisos)
+                    result = StatusCode(StatusCodes.Status206PartialContent, Context.Users.Include(u => u.Permisos)
                                              .Where(u => u.PermisosActivosName.Any(p => Equals(p, Permiso.MODVALIDATION) || Equals(p, Permiso.ADMIN)))
                                              .OrderBy(u => u.LastUpdate)
                                              .Select(u => new UserBasicDTO(u))
@@ -96,6 +105,12 @@ namespace BancDelTemps.ApiRest.Controllers
         //gestionar todo lo que se puede configurar de un usuario
         [HttpPut]
         [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> UpdateUser(UserDTO userToUpdateData)
         {
             IActionResult result;
@@ -215,6 +230,9 @@ namespace BancDelTemps.ApiRest.Controllers
 
         [HttpGet("Permisos/All")]
         [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string[]))]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> GetAllPermisos()
         {
             IActionResult result;
@@ -233,6 +251,8 @@ namespace BancDelTemps.ApiRest.Controllers
         }
 
         [HttpGet("Login")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public IActionResult GoogleLogin()
         {
             AuthenticationProperties properties;
@@ -241,6 +261,9 @@ namespace BancDelTemps.ApiRest.Controllers
         }
 
         [HttpGet("Token")]
+        [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(string))]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+
         public async Task<IActionResult> GetToken()
         {
             AuthenticateResult googleResult;
@@ -287,6 +310,8 @@ namespace BancDelTemps.ApiRest.Controllers
 
         [HttpPut("Register")]
         [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> Register()
         {
             IActionResult result;
@@ -311,6 +336,9 @@ namespace BancDelTemps.ApiRest.Controllers
         }
         [HttpDelete("Register")]
         [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> Unregister()
         {
             IActionResult result;
@@ -336,6 +364,10 @@ namespace BancDelTemps.ApiRest.Controllers
         }
         [HttpDelete("Register/userId:long")]
         [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(UserBasicDTO))]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> UnRegister(long userId)
         {
             IActionResult result;
@@ -363,6 +395,9 @@ namespace BancDelTemps.ApiRest.Controllers
         }
         [HttpDelete("Register/AllUndone")]
         [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(UserBasicDTO[]))]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> UnRegisterAllUnDone()
         {
             IActionResult result;
@@ -383,9 +418,14 @@ namespace BancDelTemps.ApiRest.Controllers
             else result = Forbid();
             return result;
         }
-        [Authorize]
+
         [HttpPut("Permisos")]
         [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(string[]))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> PermissionsPut(PermisoUserDTO permisoUserDTO)
         {
             IActionResult result;
@@ -446,7 +486,7 @@ namespace BancDelTemps.ApiRest.Controllers
                                 }
                                 result = Ok(permisosOk);
                             }
-                            else result = Forbid();//el usuario aun no se ha validado!
+                            else result = Forbid();//el usuario aun no se ha validado! //usar error propio!!
 
                         }
                         else result = NotFound();
@@ -463,6 +503,11 @@ namespace BancDelTemps.ApiRest.Controllers
 
         [HttpDelete("Permisos")]
         [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string[]))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> PermissionsDelete(PermisoUserDTO permisoUserDTO)
         {
             IActionResult result;
@@ -536,6 +581,9 @@ namespace BancDelTemps.ApiRest.Controllers
 
         [HttpGet("All/ToValidate")]
         [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserBasicDTO[]))]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public IActionResult GetAllInValidatedUsers()
         {
             IActionResult result;
@@ -557,6 +605,10 @@ namespace BancDelTemps.ApiRest.Controllers
         }
         [HttpPut("Validate/{userId:long}")]
         [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> ValidarUsuario(long userId)
         {
             IActionResult result;

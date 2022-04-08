@@ -24,6 +24,7 @@ namespace BancDelTemps.ApiRest.Models
         public static TimeSpan SelfUnresiterTime { get; set; } = TimeSpan.FromDays(1);
         public static TimeSpan MinTimeWaitToSetValidated { get; set; } = TimeSpan.FromDays(7);
         public User() {
+            
             Permisos = new List<UserPermiso>();
             Granted = new List<UserPermiso>();
             Revoked = new List<UserPermiso>();
@@ -137,7 +138,7 @@ namespace BancDelTemps.ApiRest.Models
         [NotMapped]
         public int TiempoDisponible => TotalMinutos - TotalMinutosFromPorValidar - TotalMinutosInPorValidar;
         [NotMapped]
-        public bool CanSendMessageToValidators => JoinDate <= System.DateTime.UtcNow.Add(-MinTimeWaitToSetValidated);
+        public bool CanSendMessageToValidators =>!IsValidated && JoinDate <= DateTime.UtcNow.Add(-MinTimeWaitToSetValidated);
 
         public override string ToString()
         {
@@ -180,7 +181,7 @@ namespace BancDelTemps.ApiRest.Models
             Name = userWithTransaccions.Name;
             Surname = userWithTransaccions.Surname;
             IsValidated = userWithTransaccions.IsValidated;
-            IsOnHoliDays = userWithTransaccions.IsOnHolidays;
+            IsOnHolidays = userWithTransaccions.IsOnHolidays;
             StartHolidays = userWithTransaccions.StartHolidays;
             EndHolidays = userWithTransaccions.EndHolidays;
             Email = userWithTransaccions.Email;
@@ -199,7 +200,7 @@ namespace BancDelTemps.ApiRest.Models
         public string NewEmail { get; set; }
         public DateTime JoinDate { get; set; }
 
-        public bool IsOnHoliDays { get; set; }
+        public bool IsOnHolidays { get; set; }
         public DateTime? StartHolidays { get; set; }
         public DateTime? EndHolidays { get; set; }
         public IEnumerable<string> Permisos { get; set; }
@@ -216,7 +217,7 @@ namespace BancDelTemps.ApiRest.Models
             Id = user.Id;
             Name = user.Name;
             Surname = user.Surname;
-            IsOnHoliDays = user.IsOnHolidays;
+            IsOnHolidays = user.IsOnHolidays;
             JoinDate = user.JoinDate;
             IsValidated = user.IsValidated;
         }
@@ -224,7 +225,7 @@ namespace BancDelTemps.ApiRest.Models
         public long Id { get; set; }
         public string Name { get; set; }
         public string Surname { get; set; }
-        public bool IsOnHoliDays { get; set; }
+        public bool IsOnHolidays { get; set; }
         public DateTime JoinDate { get; set; }
         public bool IsValidated { get; set; }
         //poner url picture

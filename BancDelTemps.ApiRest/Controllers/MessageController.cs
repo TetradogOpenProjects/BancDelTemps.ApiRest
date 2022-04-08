@@ -1,7 +1,9 @@
 ﻿using BancDelTemps.ApiRest.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -24,6 +26,8 @@ namespace BancDelTemps.ApiRest.Controllers
         //get all
         [HttpGet]
         [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(MessageDTO[]))]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public IActionResult GetAll()
         {
             return GetAll(0);
@@ -31,6 +35,8 @@ namespace BancDelTemps.ApiRest.Controllers
         //get fromTicks
         [HttpGet("ticksUTCLastTime:long")]
         [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(MessageDTO[]))]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public IActionResult GetAll(long ticksUTCLastTime)
         {
             IActionResult result;
@@ -52,6 +58,10 @@ namespace BancDelTemps.ApiRest.Controllers
         //hide
         [HttpPost("hide/{idMessage:long}")]
         [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> HideMessage(long idMessage)
         {
             IActionResult result;
@@ -117,6 +127,9 @@ namespace BancDelTemps.ApiRest.Controllers
         //hideAll
         [HttpPost("all/hide/{idMessageLast:long}")]
         [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(int))]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> HideAllMessage(long idMessageLast)
         {
             IActionResult result;
@@ -173,6 +186,10 @@ namespace BancDelTemps.ApiRest.Controllers
         //readed
         [HttpPost("readed/{idMessage:long}")]
         [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> ReadedMessage(long idMessage)
         {
             IActionResult result;
@@ -209,6 +226,10 @@ namespace BancDelTemps.ApiRest.Controllers
         //mark to revise
         [HttpPost("markToRevise/{idMessage:long}")]
         [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> MarkToRevise(long idMessage)
         {
             IActionResult result;
@@ -245,6 +266,10 @@ namespace BancDelTemps.ApiRest.Controllers
         //isRevised
         [HttpGet("markToRevise/{idMessage:long}")]
         [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(bool))]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> IsRevised(long idMessage)
         {
             IActionResult result;
@@ -274,12 +299,18 @@ namespace BancDelTemps.ApiRest.Controllers
         //toRevisar
         [HttpGet("toRevise")]
         [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(MessageDTO[]))]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> ToRevise()
         {
             return await ToRevise(0);
         }
         [HttpGet("toRevise/{ticksUTCLast:long}")]
         [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(MessageDTO[]))]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> ToRevise(long ticksUTCLast)
         {
             IActionResult result;
@@ -306,6 +337,10 @@ namespace BancDelTemps.ApiRest.Controllers
         //revisado
         [HttpPost("toRevise/{idMessage:long}")]
         [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> Revisado(long idMessage)
         {
             IActionResult result;
@@ -345,6 +380,10 @@ namespace BancDelTemps.ApiRest.Controllers
         //send
         [HttpPost("send")]
         [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(MessageDTO))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> Send(MessageDTO messageDTO)
         {
             IActionResult result;
@@ -360,14 +399,22 @@ namespace BancDelTemps.ApiRest.Controllers
                     //si no esta validado y ha esperado lo suficiente entonces puede reclamar ser validado sino nada
                     if (!Equals(userTo, default) && (userFrom.IsValidated || (userTo.IsModValidation && userFrom.CanSendMessageToValidators)))
                     {
-                        message = new Message();
-                        message.FromId = userFrom.Id;
-                        message.ToId = userTo.Id;
-                        message.Text = messageDTO.Text;
-                        message.Date = System.DateTime.UtcNow;
-                        Context.Messages.Add(message);
-                        await Context.SaveChangesAsync();
-                        result = Ok(new MessageDTO(message));
+                        if (AutoValidateContentText(messageDTO.Text))
+                        {
+                            message = new Message();
+                            message.FromId = userFrom.Id;
+                            message.ToId = userTo.Id;
+                            message.Text = messageDTO.Text;
+                            message.Date = System.DateTime.UtcNow;
+                            Context.Messages.Add(message);
+                            await Context.SaveChangesAsync();
+                            result = Ok(new MessageDTO(message));
+                        }
+                        else
+                        {
+                            //el contenido no es apto para la red
+                            result = BadRequest();//poner un error propio
+                        }
                     }
                     else result = Unauthorized();
                 }
@@ -377,9 +424,18 @@ namespace BancDelTemps.ApiRest.Controllers
 
             return result;
         }
+
+        private bool AutoValidateContentText(string text)
+        {//en el futuro usar IA para determinar si el contenido es apto o no para la red
+            return true;
+        }
+
         //delete all
         [HttpDelete("Clear")]
         [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(int))]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]        
         public async Task<IActionResult> Clear()
         {
             IActionResult result;

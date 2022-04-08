@@ -1,5 +1,6 @@
 using BancDelTemps.ApiRest.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using System;
@@ -26,6 +27,8 @@ namespace BancDelTemps.ApiRest.Controllers
         }
 
         [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(GiftsDTO))]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> GetAll()
         {
             IActionResult result;
@@ -40,6 +43,10 @@ namespace BancDelTemps.ApiRest.Controllers
 
         }
         [HttpGet("User/{userId:long}")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(GiftsDTO))]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> GetAllUser(long userId)
         {
             IActionResult result;
@@ -64,6 +71,10 @@ namespace BancDelTemps.ApiRest.Controllers
             return result;
         }
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(GiftDTO))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> AddGift(TransaccionDTO transaccionDTO)
         {
             User user;
@@ -92,7 +103,7 @@ namespace BancDelTemps.ApiRest.Controllers
                                 TransaccionId = transaccion.Id
                             };
                             Context.Gifts.Add(gift);
-                            result = Ok(gift);
+                            result = Ok(new GiftDTO(gift));
                         }
                         else result = BadRequest();
 
@@ -105,6 +116,11 @@ namespace BancDelTemps.ApiRest.Controllers
             return result;
         }
         [HttpPut]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> UpdateGift(TransaccionDTO transaccionDTO)
         {
             IActionResult result;

@@ -1,6 +1,8 @@
 ﻿using BancDelTemps.ApiRest.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -26,6 +28,10 @@ namespace BancDelTemps.ApiRest.Controllers
         }
 
         [HttpGet("{idTransaccion:long}")]
+        [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(TransaccionDTO))]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> Get(long idTransaccion)
         {
 
@@ -53,6 +59,9 @@ namespace BancDelTemps.ApiRest.Controllers
             return result;
         }
         [HttpGet("Delegar/{idTransaccionDelegada:long}")]
+        [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(TransaccionDelegadaDTO))]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public IActionResult GetDelegada(long idTransaccionDelegada)
         {
             //falta probar
@@ -78,6 +87,8 @@ namespace BancDelTemps.ApiRest.Controllers
         }
 
         [HttpGet("All/{ticksLastUpdate:long}")]
+        [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(TransaccionesDTO))]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public IActionResult GetAll(long ticksLastUpdate)
         {
             IActionResult result;
@@ -92,6 +103,8 @@ namespace BancDelTemps.ApiRest.Controllers
         }
 
         [HttpGet("Delegadas")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TransaccionDelegadaDTO[]))]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public IActionResult GetAllDelegadas()
         {
             IActionResult result;
@@ -109,6 +122,9 @@ namespace BancDelTemps.ApiRest.Controllers
         }
 
         [HttpGet("User/{userId:long}/{ticksLastUpdate:long}")]
+        [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(TransaccionesDTO))]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public IActionResult GetAllUser(long userId, long ticksLastUpdate)
         {
             IActionResult result;
@@ -127,6 +143,9 @@ namespace BancDelTemps.ApiRest.Controllers
         }
 
         [HttpGet("User/Delegadas/{userId:long}")]
+        [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(TransaccionDelegadaDTO[]))]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public IActionResult GetAllDelegadasUser(long userId)
         {
             IActionResult result;
@@ -136,7 +155,7 @@ namespace BancDelTemps.ApiRest.Controllers
                 admin = Context.GetUserPermisoWithTransacciones(Models.User.GetEmailFromHttpContext(ContextoHttp));
                 if (admin.IsAdmin)
                 {
-                    result = Ok(Context.GetUserPermisoWithTransacciones(userId).TransaccionesSigned);
+                    result = Ok(Context.GetUserPermisoWithTransacciones(userId).TransaccionesSigned.Select(t=>new TransaccionDelegadaDTO(t)));
                 }
                 else result = Unauthorized();
 
@@ -149,6 +168,12 @@ namespace BancDelTemps.ApiRest.Controllers
         }
 
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(TransaccionesGrupoDTO))]
+        [ProducesResponseType(StatusCodes.Status206PartialContent, Type = typeof(TransaccionDTO))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> AddTransaccion(TransaccionDTO transaccionDTO)
         {
             IActionResult result;
@@ -241,7 +266,7 @@ namespace BancDelTemps.ApiRest.Controllers
             {
 
                 transaccionDTO.Id = (await DoTransaccion(transaccionDTO, operacion: operacion, userFrom: user)).Id;
-                result = Ok(transaccionDTO);
+                result = StatusCode(StatusCodes.Status206PartialContent,transaccionDTO);
             }
 
             else
@@ -307,6 +332,11 @@ namespace BancDelTemps.ApiRest.Controllers
         }
 
         [HttpPut]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> UpdateTransaccion(TransaccionDTO transaccionDTO)
         {
             return await ModifyTransaccion(transaccionDTO,async (transaccion, tDTO) =>
@@ -404,6 +434,11 @@ namespace BancDelTemps.ApiRest.Controllers
         }
 
         [HttpDelete]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> DeleteTransaccion(TransaccionDTO transaccionDTO)
         {
             return await ModifyTransaccion(transaccionDTO, (transaccion, tDTO) =>
@@ -479,6 +514,11 @@ namespace BancDelTemps.ApiRest.Controllers
 
 
         [HttpPost("Delegar")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]        
         public async Task<IActionResult> AddTransaccionDelegada(TransaccionDelegadaDTO transaccionDelegadaDTO)
         {
             IActionResult result;
@@ -503,7 +543,7 @@ namespace BancDelTemps.ApiRest.Controllers
                     }
                     else if (operacion.Completada)
                     {
-                        result = Forbid();
+                        result = Forbid();//otro error para decir que ya se ha terminado
                     }
                     else if (userFrom.Id == operacion.UserId || userFrom.IsModTransaccion)
                     {
@@ -546,6 +586,11 @@ namespace BancDelTemps.ApiRest.Controllers
         }
 
         [HttpPut("Delegar")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> UpdateTransaccionDelegada(TransaccionDelegadaDTO transaccionDelegadaDTO)
         {
             return await ModifyTransaccionDelegada(transaccionDelegadaDTO, (transaccionDelegada, tDTO) =>
@@ -558,7 +603,7 @@ namespace BancDelTemps.ApiRest.Controllers
                 }
                 else if (!userDelegado.IsValidated)
                 {
-                    result = Forbid();
+                    result = Forbid();//otro error para decir que no esta validado
                 }
                 else
                 {
@@ -573,6 +618,11 @@ namespace BancDelTemps.ApiRest.Controllers
         }
 
         [HttpDelete("Delegar")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> DeleteTransaccionDelegada(TransaccionDelegadaDTO transaccionDelegadaDTO)
         {
             return await ModifyTransaccionDelegada(transaccionDelegadaDTO, (transaccionDelegada, tDTO) =>
@@ -598,7 +648,7 @@ namespace BancDelTemps.ApiRest.Controllers
                 else
                 {
                     user = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(ContextoHttp));
-                    transaccionDelegada = Context.TransaccionesDelegadas.Where(t => t.OperacionId.Equals(transaccionDelegadaDTO.IdOperacion)).FirstOrDefault();
+                    transaccionDelegada =await Context.TransaccionesDelegadas.Where(t => t.OperacionId.Equals(transaccionDelegadaDTO.IdOperacion)).FirstOrDefaultAsync();
 
                     if (Equals(transaccionDelegada, default))
                     {
@@ -619,7 +669,7 @@ namespace BancDelTemps.ApiRest.Controllers
                                 await Context.SaveChangesAsync();
 
                         }
-                        else result = Forbid();
+                        else result = Unauthorized();
                     }
                 }
 

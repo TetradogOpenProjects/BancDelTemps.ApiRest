@@ -1,5 +1,6 @@
 ﻿using BancDelTemps.ApiRest.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -22,6 +23,10 @@ namespace BancDelTemps.ApiRest.Controllers
             ContextoHttp = new ContextoHttp(HttpContext);
         }
         [HttpGet("{idOperacion:long}")]
+        [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(OperacionDTO))]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> Get(long idOperacion)
         {
             IActionResult result;
@@ -47,6 +52,9 @@ namespace BancDelTemps.ApiRest.Controllers
 
         }
         [HttpGet("All/{ticksLastUpdate:long}")]
+        [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(OperacionDTO[]))]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public IActionResult GetToValidateAll(long ticksLastUpdate)
         {
             IActionResult result;
@@ -70,6 +78,11 @@ namespace BancDelTemps.ApiRest.Controllers
         }
 
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(OperacionDTO))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> AddOperation(OperacionDTO operacionDTO)
         {
             IActionResult result;
@@ -111,15 +124,24 @@ namespace BancDelTemps.ApiRest.Controllers
             return result;
         }
         [HttpPost("{idOpracion:long}/{isValid:bool}")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(OperacionDTO))]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> Validate(long idOperacion, bool isValid)
         {
             return await DoValidate(idOperacion, isValid);
         }
         [HttpPut("{idOpracion:long}/{isValid:bool}")]
+        [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(OperacionDTO))]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]        
         public async Task<IActionResult> Revalidate(long idOperacion, bool isValid)
         {
             return await DoValidate(idOperacion, isValid, true);
         }
+
         async Task<IActionResult> DoValidate(long idOperacion, bool isValid, bool force = false)
         {
             ActionResult result;
@@ -157,6 +179,10 @@ namespace BancDelTemps.ApiRest.Controllers
         }
 
         [HttpDelete("{idOperacion:long}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> Delete(long idOperacion)
         {
             ActionResult result;
