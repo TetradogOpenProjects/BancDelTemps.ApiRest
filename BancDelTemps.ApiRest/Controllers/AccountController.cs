@@ -44,15 +44,13 @@ namespace BancDelTemps.ApiRest.Controllers
             Configuration = configuration;
             ContextoHttp = new ContextoHttp(HttpContext);
         }
-        /// <summary>
-        /// Obtiene toda la información del usuario logueado
-        /// </summary>
+
         [HttpGet]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserDTO))]
      
         [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn,typeof(ContentResult))]
-
+        [SwaggerOperation("Obtiene toda la información del usuario logueado")]
         public IActionResult GetUser()
         {
             IActionResult result;
@@ -73,6 +71,7 @@ namespace BancDelTemps.ApiRest.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserDTO))]
         [ProducesResponseType(StatusCodes.Status206PartialContent, Type = typeof(UserBasicDTO))]
         [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
+        [SwaggerOperation($"Se usa obtener la información de los miembros registrados, si lo pide un usuario validado se le da la información basica, si es un '{Permiso.CANLISTUSER} / {Permiso.ADMIN}' puede verla toda y si no está validado pues solo puede ver la información básica de los {Permiso.MODVALIDATION}/{Permiso.ADMIN}")]
         public IActionResult GetAllUsers()
         {
             return GetAllUsers(0);
@@ -82,6 +81,7 @@ namespace BancDelTemps.ApiRest.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserDTO))]
         [ProducesResponseType(StatusCodes.Status206PartialContent, Type = typeof(UserBasicDTO))]
         [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
+        [SwaggerOperation($"Se usa obtener la información de los miembros registrados, si lo pide un usuario validado se le da la información basica, si es un '{Permiso.CANLISTUSER} / {Permiso.ADMIN}' puede verla toda y si no está validado pues solo puede ver la información básica de los {Permiso.MODVALIDATION}/{Permiso.ADMIN}")]
         public IActionResult GetAllUsers(long ticksUTCLastTime)
         {//así no hay que dar todos los usuarios siempre
             IActionResult result;
