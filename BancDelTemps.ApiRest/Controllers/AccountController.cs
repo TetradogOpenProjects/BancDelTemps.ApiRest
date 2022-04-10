@@ -50,7 +50,7 @@ namespace BancDelTemps.ApiRest.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserDTO))]
      
         [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn,typeof(ContentResult))]
-        [SwaggerOperation("Obtiene toda la información del usuario logueado")]
+        [SwaggerOperation("Obtiene toda la información de le usuarie logueade")]
         public IActionResult GetUser()
         {
             IActionResult result;
@@ -71,7 +71,7 @@ namespace BancDelTemps.ApiRest.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserDTO))]
         [ProducesResponseType(StatusCodes.Status206PartialContent, Type = typeof(UserBasicDTO))]
         [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
-        [SwaggerOperation($"Se usa obtener la información de los miembros registrados, si lo pide un usuario validado se le da la información basica, si es un '{Permiso.CANLISTUSER} / {Permiso.ADMIN}' puede verla toda y si no está validado pues solo puede ver la información básica de los {Permiso.MODVALIDATION}/{Permiso.ADMIN}")]
+        [SwaggerOperation($"Se usa para obtener la información de los miembros registrados, si lo pide une usuarie validade se le da la información básica, si es un '{Permiso.CANLISTUSER} / {Permiso.ADMIN}' puede verla toda y si no está validade pues solo puede ver la información básica de los '{Permiso.MODVALIDATION} / {Permiso.ADMIN}' con el objetivo de poder ponerse en contacto para la validación")]
         public IActionResult GetAllUsers()
         {
             return GetAllUsers(0);
@@ -81,7 +81,7 @@ namespace BancDelTemps.ApiRest.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserDTO))]
         [ProducesResponseType(StatusCodes.Status206PartialContent, Type = typeof(UserBasicDTO))]
         [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
-        [SwaggerOperation($"Se usa obtener la información de los miembros registrados, si lo pide un usuario validado se le da la información basica, si es un '{Permiso.CANLISTUSER} / {Permiso.ADMIN}' puede verla toda y si no está validado pues solo puede ver la información básica de los {Permiso.MODVALIDATION}/{Permiso.ADMIN}")]
+        [SwaggerOperation($"Se usa para obtener la información de los miembros registrados, si lo pide una usuaria validada se le da la información básica, si es una '{Permiso.CANLISTUSER} / {Permiso.ADMIN}' puede verla toda y si no está validada pues solo puede ver la información básica de las '{Permiso.MODVALIDATION} / {Permiso.ADMIN}' con el objetivo de poder ponerse en contacto para la validación")]
         public IActionResult GetAllUsers(long ticksUTCLastTime)
         {//así no hay que dar todos los usuarios siempre
             IActionResult result;
@@ -126,6 +126,8 @@ namespace BancDelTemps.ApiRest.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
+        [SwaggerOperation($"Se usa para actualizar la información de una usuaria, si lo hace la propia usuaria puede cambiar solo cuando empieza y acaba su descanso en la plataforma, por otro lado una '{Permiso.MODUSER} / {Permiso.ADMIN}' puede actualizarla toda")]
+
         public async Task<IActionResult> UpdateUser(UserDTO userToUpdateData)
         {
             IActionResult result;
@@ -248,6 +250,8 @@ namespace BancDelTemps.ApiRest.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PermisoDTO[]))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
+        [SwaggerOperation($"Se usa para obtener los permisos disponibles para la gestión de la plataforma, solo una '{Permiso.ADMIN}' puede verlos ya que depende de ella")]
+
         public async Task<IActionResult> GetAllPermisos()
         {
             IActionResult result;
@@ -268,6 +272,8 @@ namespace BancDelTemps.ApiRest.Controllers
         [HttpGet("Login")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(LoginDTO))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [SwaggerOperation($"Se usa para obtener acceso a la plataforma, si se obtiene un error es que se requiere hacer login otra vez ya que el usuario ha dedicido cancelar el proceso")]
+
         public IActionResult GoogleLogin()
         {
             AuthenticationProperties properties;
@@ -278,6 +284,7 @@ namespace BancDelTemps.ApiRest.Controllers
         [HttpGet("Token")]
         [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(LoginDTO))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [SwaggerOperation($"Se usa para obtener acceso a la plataforma, si se obtiene un error es que se requiere hacer login otra vez ya que el usuario ha dedicido cancelar el proceso")]
 
         public async Task<IActionResult> GetToken()
         {
@@ -327,6 +334,7 @@ namespace BancDelTemps.ApiRest.Controllers
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
+        [SwaggerOperation($"Se usa para registrar un usuario en la plataforma, así se confirma que el login usado es el correcto, es obligatorio hacerse después del primer login (si quiere usar esa cuenta claro), ya que sino no se puede validar, en caso de no hacerse al cabo de un tiempo se borra del servidor")]
         public async Task<IActionResult> Register()
         {
             IActionResult result;
@@ -354,6 +362,8 @@ namespace BancDelTemps.ApiRest.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
+        [SwaggerOperation($"Se usa para eliminar un usuario de la plataforma, se usa en el caso de que se equivoca de cuenta al iniciar sesión y quiere rectificarlo, de esta manera los datos son eliminados del servidor inmediatamente, a no ser que haya pasado el tiempo para hacerlo, en ese caso hay que esperar a que se haga limpieza")]
+
         public async Task<IActionResult> Unregister()
         {
             IActionResult result;
@@ -383,6 +393,7 @@ namespace BancDelTemps.ApiRest.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
+        [SwaggerOperation($"Se usa para eliminar cualquier usuario de la plataforma, solo un '{Permiso.MODUSER} / {Permiso.ADMIN}' puede hacerlo ya que no tiene marcha atrás. En caso de tener algún permiso solo un '{Permiso.ADMIN}' puede hacerlo")]
         public async Task<IActionResult> UnRegister(long userId)
         {
             IActionResult result;
@@ -396,9 +407,17 @@ namespace BancDelTemps.ApiRest.Controllers
                     userToRemove = await Context.Users.Where(u => Equals(u.Id, userId)).FirstOrDefaultAsync();
                     if (!Equals(userToRemove, default))
                     {
-                        Context.Users.Remove(userToRemove);
-                        await Context.SaveChangesAsync();
-                        result = Ok(new UserBasicDTO(userToRemove));
+                        if (!userToRemove.PermisosActivos.Any() || user.IsAdmin)
+                        {
+                            Context.Users.Remove(userToRemove);
+                            await Context.SaveChangesAsync();
+                            result = Ok(new UserBasicDTO(userToRemove));
+                        }
+                        else
+                        {
+                            result = Unauthorized();
+                        }
+                   
                     }
                     else result = NotFound();
                 }
@@ -413,6 +432,7 @@ namespace BancDelTemps.ApiRest.Controllers
         [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(UserBasicDTO[]))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
+        [SwaggerOperation($"Se usa para eliminar todes les usuaries que no han confirmado su registro, solo une '{Permiso.ADMIN}' puede hacerlo")]
         public async Task<IActionResult> UnRegisterAllUnDone()
         {
             IActionResult result;
@@ -442,6 +462,7 @@ namespace BancDelTemps.ApiRest.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [SwaggerResponse(OwnStatusCodes.NotValidated, OwnMessage.NotValidated, typeof(ContentResult))]
         [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
+        [SwaggerOperation($"Se usa para dar uno o varios permisos a une usuarie. Solo une '{Permiso.ADMIN}' puede hacerlo ")]
         public async Task<IActionResult> PermissionsPut(PermisoUserDTO permisoUserDTO)
         {
             IActionResult result;
@@ -524,6 +545,7 @@ namespace BancDelTemps.ApiRest.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
+        [SwaggerOperation($"Se usa para revocar uno o varios permisos a un usuario. Solo un '{Permiso.ADMIN}' puede hacerlo ")]
         public async Task<IActionResult> PermissionsDelete(PermisoUserDTO permisoUserDTO)
         {
             IActionResult result;
@@ -600,6 +622,7 @@ namespace BancDelTemps.ApiRest.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserBasicDTO[]))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
+        [SwaggerOperation($"Se usa para obtener todos los usuarios que no han sido validados. Puede hacerlo une '{Permiso.MODVALIDATION} / {Permiso.ADMIN}'")]
         public IActionResult GetAllInValidatedUsers()
         {
             IActionResult result;
@@ -625,6 +648,7 @@ namespace BancDelTemps.ApiRest.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
+        [SwaggerOperation($"Se usa para validar a una usuaria. Puede hacerlo una '{Permiso.MODVALIDATION} / {Permiso.ADMIN}'")]
         public async Task<IActionResult> ValidarUsuario(long userId)
         {
             IActionResult result;
