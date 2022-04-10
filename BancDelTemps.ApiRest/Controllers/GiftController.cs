@@ -97,17 +97,17 @@ namespace BancDelTemps.ApiRest.Controllers
                     if (user.Id == transaccionDTO.IdFrom || user.IsModGift)
                     {
    
-                        transaccion = await TransaccionesController.DoTransaccion(transaccionDTO, user.IsModGift && user.IsModTransaccion ? user : default);
-                        if (!Equals(transaccion, default))
+                        result = await TransaccionesController.DoTransaccion(transaccionDTO, user.IsModGift && user.IsModTransaccion ? user : default);
+                        if (result is OkObjectResult)
                         {
                             gift = new Gift()
                             {
-                                TransaccionId = transaccion.Id
+                                TransaccionId = ((result as OkObjectResult).Value as Transaccion).Id
                             };
                             Context.Gifts.Add(gift);
                             result = Ok(new GiftDTO(gift));
                         }
-                        else result = BadRequest();
+    
 
                     }
                     else result = Unauthorized();
@@ -142,13 +142,17 @@ namespace BancDelTemps.ApiRest.Controllers
                     {
                         if (Context.Gifts.Where(g => g.TransaccionId == transaccionDTO.Id).Any())
                         {
-                            if (await TransaccionesController.DoTransaccionUpdate(transaccionDTO, user.IsModGift && user.IsModTransaccion ? user : default))
+                            result = await TransaccionesController.DoTransaccionUpdate(transaccionDTO, user.IsModGift && user.IsModTransaccion ? user : default);
+                            if (result is OkObjectResult)
                             {
-                                result = Ok();
-                            }
-                            else
-                            {
-                                result = Forbid();
+                                if ((bool)(result as OkObjectResult).Value)
+                                {
+                                    result = Ok();
+                                }
+                                else
+                                {
+                                    result = Forbid();
+                                }
                             }
                         }                        
                         else

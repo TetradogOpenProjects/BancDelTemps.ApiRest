@@ -47,6 +47,4 @@ C:\Users\Gabriel\Documents\GitHub\BancDelTemps.ApiRest\BancDelTemps.ApiRest\obj\
 C:\Users\Gabriel\Documents\GitHub\BancDelTemps.ApiRest\BancDelTemps.ApiRest\obj\Debug\net6.0\BancDelTemps.ApiRest.pdb
 C:\Users\Gabriel\Documents\GitHub\BancDelTemps.ApiRest\BancDelTemps.ApiRest\obj\Debug\net6.0\BancDelTemps.ApiRest.genruntimeconfig.cache
 C:\Users\Gabriel\Documents\GitHub\BancDelTemps.ApiRest\BancDelTemps.ApiRest\obj\Debug\net6.0\ref\BancDelTemps.ApiRest.dll
-C:\Users\Gabriel\Documents\GitHub\BancDelTemps.ApiRest\BancDelTemps.ApiRest\bin\Debug\net6.0\BancDelTemps.ApiRest.xml
-C:\Users\Gabriel\Documents\GitHub\BancDelTemps.ApiRest\BancDelTemps.ApiRest\obj\Debug\net6.0\BancDelTemps.ApiRest.xml
 C:\Users\Gabriel\Documents\GitHub\BancDelTemps.ApiRest\BancDelTemps.ApiRest\bin\Debug\net6.0\Swashbuckle.AspNetCore.Annotations.dll

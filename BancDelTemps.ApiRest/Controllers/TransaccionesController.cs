@@ -30,10 +30,11 @@ namespace BancDelTemps.ApiRest.Controllers
         }
 
         [HttpGet("{idTransaccion:long}")]
-        [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(TransaccionDTO))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TransaccionDTO))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
+        [SwaggerOperation($"Se usa para obetener la información de una transacción, lo puede usar el usuario que envia, recibe o un '{Permiso.MODTRANSACCION} / {Permiso.ADMIN}'")]
         public async Task<IActionResult> Get(long idTransaccion)
         {
 
@@ -61,26 +62,32 @@ namespace BancDelTemps.ApiRest.Controllers
             return result;
         }
         [HttpGet("Delegar/{idTransaccionDelegada:long}")]
-        [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(TransaccionDelegadaDTO))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TransaccionDelegadaDTO))]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
-        public IActionResult GetDelegada(long idTransaccionDelegada)
+        [SwaggerOperation($"Se usa para obetener la transaccion delegada, lo puede usar quien la ha delegado y  un '{Permiso.MODTRANSACCION}/{Permiso.ADMIN}'")]
+        public async Task<IActionResult> GetDelegada(long idTransaccionDelegada)
         {
-            //falta probar
             IActionResult result;
             User user;
             TransaccionDelegada transaccionDelegada;
             if (ContextoHttp.IsAuthenticated)
             {
                 user = Context.GetUserPermisoWithTransacciones(Models.User.GetEmailFromHttpContext(ContextoHttp));
-                transaccionDelegada = user.TransaccionesSigned.Where(t => t.Id == idTransaccionDelegada).FirstOrDefault();
+                transaccionDelegada = await Context.TransaccionesDelegadas.Where(t => t.Id == idTransaccionDelegada).FirstOrDefaultAsync();
                 if (Equals(transaccionDelegada, default))
                 {
                     result = NotFound();
                 }
+                else if (transaccionDelegada.UserId != user.Id && !user.IsModTransaccion)
+                {
+                    result = Unauthorized();
+                }
                 else
                 {
                     result = Ok(new TransaccionDelegadaDTO(transaccionDelegada));
+
                 }
             }
             else result = this.NotLoggedIn();
@@ -89,8 +96,9 @@ namespace BancDelTemps.ApiRest.Controllers
         }
 
         [HttpGet("All/{ticksLastUpdate:long}")]
-        [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(TransaccionesDTO))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TransaccionesDTO))]
         [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
+        [SwaggerOperation($"Se usa para obetener las transacciones'")]
         public IActionResult GetAll(long ticksLastUpdate)
         {
             IActionResult result;
@@ -124,9 +132,10 @@ namespace BancDelTemps.ApiRest.Controllers
         }
 
         [HttpGet("User/{userId:long}/{ticksLastUpdate:long}")]
-        [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(TransaccionesDTO))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TransaccionesDTO))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
+        [SwaggerOperation($"Se usa para obetener todas las transacciones de un usuario,solo lo puede usar  un ' {Permiso.ADMIN}'")]
         public IActionResult GetAllUser(long userId, long ticksLastUpdate)
         {
             IActionResult result;
@@ -145,9 +154,10 @@ namespace BancDelTemps.ApiRest.Controllers
         }
 
         [HttpGet("User/Delegadas/{userId:long}")]
-        [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(TransaccionDelegadaDTO[]))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TransaccionDelegadaDTO[]))]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
+        [SwaggerOperation($"Se usa para obetener todas las transacciones delegadas de un usuario, solo lo puede usar un '{Permiso.ADMIN}'")]
         public IActionResult GetAllDelegadasUser(long userId)
         {
             IActionResult result;
@@ -157,7 +167,7 @@ namespace BancDelTemps.ApiRest.Controllers
                 admin = Context.GetUserPermisoWithTransacciones(Models.User.GetEmailFromHttpContext(ContextoHttp));
                 if (admin.IsAdmin)
                 {
-                    result = Ok(Context.GetUserPermisoWithTransacciones(userId).TransaccionesSigned.Select(t=>new TransaccionDelegadaDTO(t)));
+                    result = Ok(Context.GetUserPermisoWithTransacciones(userId).TransaccionesSigned.Select(t => new TransaccionDelegadaDTO(t)));
                 }
                 else result = Unauthorized();
 
@@ -170,13 +180,14 @@ namespace BancDelTemps.ApiRest.Controllers
         }
 
         [HttpPost]
-        [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(TransaccionesGrupoDTO))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TransaccionesGrupoDTO))]
         [ProducesResponseType(StatusCodes.Status206PartialContent, Type = typeof(TransaccionDTO))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [SwaggerResponse(OwnStatusCodes.NotValidated, OwnMessage.NotValidated, typeof(ContentResult))]
         [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
+        [SwaggerOperation($"Se usa para crear una transacción, lo puede usar el usuario que hizo la operación o un '{Permiso.MODTRANSACCION} / {Permiso.ADMIN}'")]
         public async Task<IActionResult> AddTransaccion(TransaccionDTO transaccionDTO)
         {
             IActionResult result;
@@ -230,7 +241,7 @@ namespace BancDelTemps.ApiRest.Controllers
             else result = this.NotLoggedIn();
             return result;
         }
-        async Task<IActionResult> DoTransaccion([NotNull]TransaccionDTO transaccionDTO, User user=default, Operacion operacion=default)
+        async Task<IActionResult> DoTransaccion([NotNull] TransaccionDTO transaccionDTO, User user, Operacion operacion)
         {
             IActionResult result;
 
@@ -238,100 +249,103 @@ namespace BancDelTemps.ApiRest.Controllers
 
             bool autoritzed;
 
-            if (Equals(user, default))
+
+            if (operacion.Id != transaccionDTO.IdOperacion)
             {
-                user = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(ContextoHttp));
+                result = BadRequest($"la {nameof(Operacion)} con {nameof(Operacion.Id)}={transaccionDTO.IdOperacion} no es la misma que la enviada {nameof(Operacion.Id)}={operacion.Id}");
             }
-
-            if (Equals(operacion, default))
-            {//por mirar... 
-
-            }else if (operacion.Id != transaccionDTO.IdOperacion)
-            {
-                throw new Exception($"la {nameof(Operacion)} con {nameof(Operacion.Id)}={transaccionDTO.IdOperacion} no es la misma que la enviada {nameof(Operacion.Id)}={operacion.Id}");
-            }
-
-            autoritzed= user.Id == transaccionDTO.IdFrom
-                              || user.IsModTransaccion;
-
-            if (!autoritzed)
-            {
-                transaccionDelegada = Context.GetTransaccionDelegada(operacion);
-
-                autoritzed = !Equals(transaccionDelegada, default)
-                             && user.Id == transaccionDelegada.UserId
-                             && transaccionDelegada.IsActiva;
-
-
-            }
-
-            if (autoritzed)
-            {
-
-                transaccionDTO.Id = (await DoTransaccion(transaccionDTO, operacion: operacion, userFrom: user)).Id;
-                result = StatusCode(StatusCodes.Status206PartialContent,transaccionDTO);
-            }
-
             else
             {
+                autoritzed = user.Id == transaccionDTO.IdFrom || user.IsModTransaccion;
 
-                result = Unauthorized();
+                if (!autoritzed)
+                {
+                    transaccionDelegada = Context.GetTransaccionDelegada(operacion);
+
+                    autoritzed = !Equals(transaccionDelegada, default)
+                                 && user.Id == transaccionDelegada.UserId
+                                 && transaccionDelegada.IsActiva;
 
 
+                }
+
+                if (autoritzed)
+                {
+                    result = await DoTransaccion(transaccionDTO, operacion: operacion, userFrom: user);
+                    if (result is OkObjectResult)
+                    {
+                        transaccionDTO.Id = ((result as OkObjectResult).Value as Transaccion).Id;
+                        result = StatusCode(StatusCodes.Status206PartialContent, transaccionDTO);
+                    }
+                }
+
+                else
+                {
+
+                    result = Unauthorized();
+
+
+                }
             }
             return result;
         }
-        internal async Task<Transaccion> DoTransaccion([NotNull] TransaccionDTO transaccionDTO, User mod = default, Operacion operacion = default, User userFrom = default)
+        internal async Task<IActionResult> DoTransaccion([NotNull] TransaccionDTO transaccionDTO, User mod = default, Operacion operacion = default, User userFrom = default)
         {
-            Transaccion transaccion=default;
+            IActionResult result = default;
+            Transaccion transaccion = default;
 
             #region Validar Parametros
             if (Equals(operacion, default))
             {
                 operacion = await Context.Operaciones.FindAsync(transaccionDTO.IdOperacion);
-            }else if (transaccionDTO.IdOperacion != operacion.Id)
+            }
+            else if (transaccionDTO.IdOperacion != operacion.Id)
             {
-                throw new Exception($"La {nameof(Operacion)} '{transaccionDTO.IdOperacion}' no coincide con la enviada '{operacion.Id}'");
+                result = BadRequest($"La {nameof(Operacion)} '{transaccionDTO.IdOperacion}' no coincide con la enviada '{operacion.Id}'");
             }
             if (Equals(userFrom, default))
             {
-                userFrom =  Context.GetUserPermisoWithTransacciones(transaccionDTO.IdFrom);
+                userFrom = Context.GetUserPermisoWithTransacciones(transaccionDTO.IdFrom);
             }
             else if (transaccionDTO.IdFrom != userFrom.Id)
             {
-                throw new Exception($"El {nameof(Models.User)} '{await Context.Users.FindAsync(transaccionDTO.IdFrom)}' no coincide con el enviado '{userFrom}'");
+                result = BadRequest($"El {nameof(Models.User)} '{await Context.Users.FindAsync(transaccionDTO.IdFrom)}' no coincide con el enviado '{userFrom}'");
             }
             if (Equals(mod, default))
             {
-                mod =Context.GetUserPermiso( Models.User.GetEmailFromHttpContext(ContextoHttp));
+                mod = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(ContextoHttp));
                 if (!mod.IsModTransaccion)
                 {
                     mod = default;
                 }
-            } else if (!mod.IsModTransaccion)
+            }
+            else if (!mod.IsModTransaccion)
             {
-                throw new Exception($"El {nameof(Models.User)} {nameof(mod)}={mod} no tiene el permiso '{Permiso.MODTRANSACCION}' ({nameof(mod.IsModTransaccion)})");
+                result = BadRequest($"El {nameof(Models.User)} {nameof(mod)}={mod} no tiene el permiso '{Permiso.MODTRANSACCION}' ({nameof(mod.IsModTransaccion)})");
             }
             #endregion
-
-            if (userFrom.TiempoDisponible - transaccionDTO.Minutos >= 0)
+            if (Equals(result, default))
             {
-                //aqui pongo los criterios para poder hacer la operacion
-                //si se puede hacer creo la transacción
-                if (!operacion.IsRevisada || !Equals(mod, default))
+                if (userFrom.TiempoDisponible - transaccionDTO.Minutos >= 0)
                 {
-                    operacion.Completada = transaccionDTO.IsComplete;
-                    Context.Operaciones.Update(operacion);
-                    transaccion = transaccionDTO.ToTransaccion();
-                    if (!Equals(mod, default))
+                    //aqui pongo los criterios para poder hacer la operacion
+                    //si se puede hacer creo la transacción
+                    if (!operacion.IsRevisada || !Equals(mod, default))
                     {
-                        transaccion.UserValidator = mod;
+                        operacion.Completada = transaccionDTO.IsComplete;
+                        Context.Operaciones.Update(operacion);
+                        transaccion = transaccionDTO.ToTransaccion();
+                        if (!Equals(mod, default))
+                        {
+                            transaccion.UserValidator = mod;
+                        }
+                        await Context.Transacciones.AddAsync(transaccion);
+                        await Context.SaveChangesAsync();
                     }
-                    await Context.Transacciones.AddAsync(transaccion);
-                    await Context.SaveChangesAsync();
                 }
+                result = Ok(transaccion);
             }
-            return transaccion;
+            return result;
         }
 
         [HttpPut]
@@ -341,37 +355,40 @@ namespace BancDelTemps.ApiRest.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [SwaggerResponse(OwnStatusCodes.NotValidated, OwnMessage.NotValidated, typeof(ContentResult))]
         [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
+        [SwaggerOperation($"Se usa para actualizar una transacción, lo puede usar el usuario que la hizo/quién lo tiene delegado (solo si no ha pasado el plazo máximo para hacerlo)  o un '{Permiso.MODTRANSACCION} / {Permiso.ADMIN}' que puede siempre.")]
+
         public async Task<IActionResult> UpdateTransaccion(TransaccionDTO transaccionDTO)
         {
-            return await ModifyTransaccion(transaccionDTO,async (transaccion, tDTO) =>
-            {
-                IActionResult result;
-                User user = Context.Users.Find(tDTO.IdTo);
-                if (Equals(user, default))
-                {
-                    result = NotFound();
-                }
-                else if (!user.IsValidated)
-                {
-                    result = this.NotValidated();
-                }
-                else
-                {
-                    await DoTransaccionUpdate(tDTO,default,transaccion);
-                    result = Ok();
-                }
-                return result;
-            });
+            return await ModifyTransaccion(transaccionDTO, async (transaccion, tDTO) =>
+             {
+                 IActionResult result;
+                 User user = Context.Users.Find(tDTO.IdTo);
+                 if (Equals(user, default))
+                 {
+                     result = NotFound();
+                 }
+                 else if (!user.IsValidated)
+                 {
+                     result = this.NotValidated();
+                 }
+                 else
+                 {
+                    
+                     result = await DoTransaccionUpdate(tDTO, default, transaccion);
+                 }
+                 return result;
+             });
         }
 
-        internal async Task<bool> DoTransaccionUpdate([NotNull] TransaccionDTO tDTO,User mod=default, Transaccion transaccion=default,User userFrom=default,Operacion operacion=default)
+        internal async Task<IActionResult> DoTransaccionUpdate([NotNull] TransaccionDTO tDTO, User mod = default, Transaccion transaccion = default, User userFrom = default, Operacion operacion = default)
         {
+            IActionResult result = default;
             bool puedeHacerla;
 
             #region Validar Parametros
-            if (Equals(transaccion,default))
+            if (Equals(transaccion, default))
             {
-                transaccion =await Context.Transacciones.FindAsync(tDTO.Id);
+                transaccion = await Context.Transacciones.FindAsync(tDTO.Id);
                 if (Equals(transaccion, default))
                     throw new Exception($"{nameof(Transaccion)} {tDTO.Id} no encontrada!!");
             }
@@ -393,7 +410,8 @@ namespace BancDelTemps.ApiRest.Controllers
             {
                 userFrom = Context.GetUserPermisoWithTransacciones(tDTO.IdFrom);
 
-            }else if (tDTO.IdFrom != userFrom.Id)
+            }
+            else if (tDTO.IdFrom != userFrom.Id)
             {
                 throw new Exception($"El {nameof(Models.User)} {userFrom} no se corresponde con el enviado {await Context.Users.FindAsync(tDTO.IdFrom)}");
             }
@@ -410,31 +428,37 @@ namespace BancDelTemps.ApiRest.Controllers
                     {
                         mod = default;
                     }
-                }else if (!mod.IsModTransaccion)
-                {
-                    throw new Exception($"El {nameof(Models.User)} {nameof(mod)}='{mod}' no tiene el permiso '{Permiso.MODTRANSACCION}' ({nameof(mod.IsModTransaccion)})");
                 }
-                if (!operacion.IsRevisada || !Equals(mod, default))
+                else if (!mod.IsModTransaccion)
                 {
-                    transaccion.Minutos = tDTO.Minutos;
-                    transaccion.UserToId = tDTO.IdTo;
-                    transaccion.Fecha = tDTO.Fecha;
-                    if (!Equals(mod, default))
+                    result = BadRequest($"El {nameof(Models.User)} {nameof(mod)}='{mod}' no tiene el permiso '{Permiso.MODTRANSACCION}' ({nameof(mod.IsModTransaccion)})");
+                }
+                if (Equals(result, default))
+                {
+                    if (!operacion.IsRevisada || !Equals(mod, default))
                     {
-                        transaccion.UserValidator = mod;
+                        transaccion.Minutos = tDTO.Minutos;
+                        transaccion.UserToId = tDTO.IdTo;
+                        transaccion.Fecha = tDTO.Fecha;
+                        if (!Equals(mod, default))
+                        {
+                            transaccion.UserValidator = mod;
 
-                    }
-                    else
-                    {//como se ha modificado se tiene que volver a validar!
-                        transaccion.UserValidator = default;
-                        transaccion.UserValidatorId = default;
-                    }
+                        }
+                        else
+                        {//como se ha modificado se tiene que volver a validar!
+                            transaccion.UserValidator = default;
+                            transaccion.UserValidatorId = default;
+                        }
 
-                    Context.Transacciones.Update(transaccion);
+                        Context.Transacciones.Update(transaccion);
+                    }
+                    else puedeHacerla = false;
                 }
-                else puedeHacerla = false;
             }
-            return puedeHacerla;
+            if (Equals(result, default))
+                result = Ok(new IsOkDTO(puedeHacerla));
+            return result;
         }
 
         [HttpDelete]
@@ -443,6 +467,7 @@ namespace BancDelTemps.ApiRest.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
+        [SwaggerOperation($"Se usa para eliminar una transacción, lo puede usar el usuario que la hizo/quién lo tiene delegado (solo si no ha pasado el plazo máximo para hacerlo)  o un '{Permiso.MODTRANSACCION} / {Permiso.ADMIN}' que puede siempre.")]
         public async Task<IActionResult> DeleteTransaccion(TransaccionDTO transaccionDTO)
         {
             return await ModifyTransaccion(transaccionDTO, (transaccion, tDTO) =>
@@ -454,7 +479,7 @@ namespace BancDelTemps.ApiRest.Controllers
 
         }
 
-        async Task<IActionResult> ModifyTransaccion(TransaccionDTO transaccionDTO,[NotNull] ModifyTransaccionDelegate metodoModifyTransaccion)
+        async Task<IActionResult> ModifyTransaccion(TransaccionDTO transaccionDTO, [NotNull] ModifyTransaccionDelegate metodoModifyTransaccion)
         {
             IActionResult result;
             User user;
@@ -517,6 +542,7 @@ namespace BancDelTemps.ApiRest.Controllers
         }
 
 
+
         [HttpPost("Delegar")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -526,6 +552,7 @@ namespace BancDelTemps.ApiRest.Controllers
         [SwaggerResponse(OwnStatusCodes.OperacionAcabada, OwnMessage.OperacionAcabada, typeof(ContentResult))]
         [SwaggerResponse(OwnStatusCodes.OperacionRepetida, OwnMessage.OperacionRepetida, typeof(ContentResult))]
         [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
+        [SwaggerOperation($"Se usa para delegar una transacción, lo puede usar el usuario que hizo la operación o un '{Permiso.MODTRANSACCION} / {Permiso.ADMIN}'")]
         public async Task<IActionResult> AddTransaccionDelegada(TransaccionDelegadaDTO transaccionDelegadaDTO)
         {
             IActionResult result;
@@ -599,6 +626,7 @@ namespace BancDelTemps.ApiRest.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ParamDTO))]
         [SwaggerResponse(OwnStatusCodes.NotValidated, OwnMessage.NotValidated, typeof(ContentResult))]
         [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
+        [SwaggerOperation($"Se usa para actualizar la transacción delegada, lo puede usar el usuario que hizo la operación o un '{Permiso.MODTRANSACCION} / {Permiso.ADMIN}'")]
         public async Task<IActionResult> UpdateTransaccionDelegada(TransaccionDelegadaDTO transaccionDelegadaDTO)
         {
             return await ModifyTransaccionDelegada(transaccionDelegadaDTO, (transaccionDelegada, tDTO) =>
@@ -629,8 +657,9 @@ namespace BancDelTemps.ApiRest.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status404NotFound,Type=typeof(ParamDTO))]
+        [ProducesResponseType(StatusCodes.Status404NotFound, Type = typeof(ParamDTO))]
         [SwaggerResponse(OwnStatusCodes.NotLoggedIn, OwnMessage.NotLoggedIn, typeof(ContentResult))]
+        [SwaggerOperation($"Se usa para dejar de delegar una transacción, lo puede usar el usuario que hizo la operación o un '{Permiso.MODTRANSACCION} / {Permiso.ADMIN}'")]
         public async Task<IActionResult> DeleteTransaccionDelegada(TransaccionDelegadaDTO transaccionDelegadaDTO)
         {
             return await ModifyTransaccionDelegada(transaccionDelegadaDTO, (transaccionDelegada, tDTO) =>
@@ -640,7 +669,7 @@ namespace BancDelTemps.ApiRest.Controllers
             });
         }
 
-        async Task<IActionResult> ModifyTransaccionDelegada(TransaccionDelegadaDTO transaccionDelegadaDTO,[NotNull] ModifyTransaccionDelegadaDelegate metodoModifyTransaccion)
+        async Task<IActionResult> ModifyTransaccionDelegada(TransaccionDelegadaDTO transaccionDelegadaDTO, [NotNull] ModifyTransaccionDelegadaDelegate metodoModifyTransaccion)
         {
             IActionResult result;
             User user;
@@ -656,7 +685,7 @@ namespace BancDelTemps.ApiRest.Controllers
                 else
                 {
                     user = Context.GetUserPermiso(Models.User.GetEmailFromHttpContext(ContextoHttp));
-                    transaccionDelegada =await Context.TransaccionesDelegadas.Where(t => t.OperacionId.Equals(transaccionDelegadaDTO.IdOperacion)).FirstOrDefaultAsync();
+                    transaccionDelegada = await Context.TransaccionesDelegadas.Where(t => t.OperacionId.Equals(transaccionDelegadaDTO.IdOperacion)).FirstOrDefaultAsync();
 
                     if (Equals(transaccionDelegada, default))
                     {
