@@ -58,7 +58,7 @@ namespace BancDelTemps.ApiRest.Controllers
 
         }
         //hide
-        [HttpPost("Hide/{idMessage:long}")]
+        [HttpPut("Hide/{idMessage:long}")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -127,7 +127,7 @@ namespace BancDelTemps.ApiRest.Controllers
             return result;
         }
         //hideAll
-        [HttpPost("All/Hide/{idMessageLast:long}")]
+        [HttpPut("All/Hide/{idMessageLast:long}")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(CountDTO))]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -186,7 +186,7 @@ namespace BancDelTemps.ApiRest.Controllers
             return result;
         }
         //readed
-        [HttpPost("Readed/{idMessage:long}")]
+        [HttpPut("Readed/{idMessage:long}")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -226,7 +226,7 @@ namespace BancDelTemps.ApiRest.Controllers
             return result;
         }
         //mark to revise
-        [HttpPost("MarkToRevise/{idMessage:long}")]
+        [HttpPut("MarkToRevise/{idMessage:long}")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -337,7 +337,7 @@ namespace BancDelTemps.ApiRest.Controllers
             return result;
         }
         //revisado
-        [HttpPost("ToRevise/{idMessage:long}")]
+        [HttpPut("ToRevise/{idMessage:long}")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
